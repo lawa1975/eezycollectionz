@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+javax:
+  persistence:
+    schema-generation:
+      scripts:
+        action: create
+        create-target: create.sql
+        create-source: metadata
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: test+123
+  sql:
+    init:
+      mode: always
+  jpa:
+    generate-ddl: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    operations-sorter: alpha              
+
+#  datasource:
+#    generate-unique-name: false
+#    name: stubben
+#  h2:
+#    console:
+#      enabled: true
+
+#  sql:
+#    init:
+#      mode: always
+#      schema-locations: 
+
+stubben:
+  welcome-message: This is a service for managing watchlists
+  author: Lars Wagner

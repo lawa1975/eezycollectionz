@@ -1,0 +1,34 @@
+### Get all collections
+http://localhost:8080/api/collection
+
+### Add a new collection
+POST http://localhost:8080/api/collection HTTP/1.1
+content-type: application/json
+
+{
+    "id": "0c2d5ee4-8888-4ceb-b0c8-17405fda8888",
+    "name": "Wunschliste für den 6. Geburtstag von Frauke"
+}
+
+### Get a collection by its ID
+http://localhost:8080/api/collection/0c2d5ee4-8888-4ceb-b0c8-17405fda8888
+
+
+### Post an invalid collection
+POST http://localhost:8080/api/collection HTTP/1.1
+content-type: application/json
+
+{
+    "id": 134
+}
+
+### Modify a collection
+PUT http://localhost:8080/api/collection/0c2d5ee4-8888-4ceb-b0c8-17405fda8888 HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Kapitalanlagen in Dresden"
+}
+
+### Delete a collection
+DELETE http://localhost:8080/api/collection/0c2d5ee4-8888-4ceb-b0c8-17405fda8888
