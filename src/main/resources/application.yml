@@ -38,6 +38,6 @@ springdoc:
 #      mode: always
 #      schema-locations: 
 
-stubben:
+eezycollectionz:
   welcome-message: This is a service for managing watchlists
   author: Lars Wagner
