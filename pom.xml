@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>de.wagner1975</groupId>
-	<artifactId>stubben</artifactId>
+	<artifactId>eezycollectionz</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>stubben</name>
-	<description>Watchlist REST API</description>
+	<name>EezyCollectionZ</name>
+	<description>Simple micro service to manage collections of entries with custom content</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
