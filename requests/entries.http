@@ -1,0 +1,11 @@
+
+### Get a entry by its ID
+http://localhost:8080/api/entries/e9313504-51e9-42c1-87f0-4b66d0003754
+
+### Add a new entry
+POST http://localhost:8080/api/entries/collection/a8af22da-a8f6-4165-bf81-71c2001faa37 HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Ein interessanter Listeneintrag (3)"
+}

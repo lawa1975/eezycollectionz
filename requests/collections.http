@@ -1,8 +1,8 @@
 ### Get all collections
-http://localhost:8080/api/collection
+http://localhost:8080/api/collections
 
 ### Add a new collection
-POST http://localhost:8080/api/collection HTTP/1.1
+POST http://localhost:8080/api/collections HTTP/1.1
 content-type: application/json
 
 {
@@ -10,11 +10,11 @@ content-type: application/json
 }
 
 ### Get a collection by its ID
-http://localhost:8080/api/collection/992e4141-add3-49ba-875b-d92da4ea9a18
+http://localhost:8080/api/collections/992e4141-add3-49ba-875b-d92da4ea9a18
 
 
 ### Post an invalid collection
-POST http://localhost:8080/api/collection HTTP/1.1
+POST http://localhost:8080/api/collections HTTP/1.1
 content-type: application/json
 
 {
@@ -22,7 +22,7 @@ content-type: application/json
 }
 
 ### Modify a collection
-PUT http://localhost:8080/api/collection/992e4141-add3-49ba-875b-d92da4ea9a18 HTTP/1.1
+PUT http://localhost:8080/api/collections/992e4141-add3-49ba-875b-d92da4ea9a18 HTTP/1.1
 content-type: application/json
 
 {
@@ -30,4 +30,4 @@ content-type: application/json
 }
 
 ### Delete a collection
-DELETE http://localhost:8080/api/collection/c725efeb-de77-46df-916a-2fc195376386
+DELETE http://localhost:8080/api/collections/c725efeb-de77-46df-916a-2fc195376386

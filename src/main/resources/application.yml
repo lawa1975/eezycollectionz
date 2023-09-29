@@ -41,3 +41,4 @@ springdoc:
 eezycollectionz:
   welcome-message: This is a service for managing watchlists
   author: Lars Wagner
+  max-retries-to-generate-id: 5

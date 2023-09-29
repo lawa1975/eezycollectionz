@@ -2,6 +2,7 @@ package de.wagner1975.eezycollectionz.collection;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -16,15 +17,18 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import de.wagner1975.eezycollectionz.ApplicationProperties;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/api/collection")
+@RequestMapping("/api/collections")
 @AllArgsConstructor
 public class CollectionController {
 
   private final CollectionRepository repository;
+  
+  private final ApplicationProperties appProps; 
   
   @GetMapping("")
   public List<Collection> findAll() {
@@ -40,15 +44,22 @@ public class CollectionController {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("")
   public Collection create(@Valid @RequestBody CollectionInput collectionInput) {
-    UUID generatedId = UUID.randomUUID();
-
-    if (repository.existsById(generatedId)) {
-      throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "ID already exists");     
+    UUID generatedId = null;
+    var maxRetries = appProps.maxRetriesToGenerateId();
+    var i = 0;
+    do {
+      generatedId = UUID.randomUUID();      
+      i++;
     }
+    while (repository.existsById(generatedId) && i <= maxRetries);
 
-    Instant now = Instant.now();
+    if (i > maxRetries || Objects.isNull(generatedId)) {
+      throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to generate non-existing ID");     
+    }    
 
-    Collection newCollection = Collection.builder()
+    var now = Instant.now();
+
+    var newCollection = Collection.builder()
       .id(generatedId)
       .createdAt(now)
       .lastModifiedAt(now)
@@ -61,7 +72,7 @@ public class CollectionController {
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public Collection update(@Valid @RequestBody CollectionInput collectionInput, @PathVariable UUID id) {
-    Collection existingCollection = repository.findById(id).orElseThrow(
+    var existingCollection = repository.findById(id).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
 
     existingCollection.setLastModifiedAt(Instant.now());
