@@ -1,11 +1,24 @@
+### Get entries by collection ID
+http://localhost:8080/api/entries?collectionId=3c5d2290-4e95-459a-afec-9fce78ce9a80
 
 ### Get a entry by its ID
 http://localhost:8080/api/entries/e9313504-51e9-42c1-87f0-4b66d0003754
 
 ### Add a new entry
-POST http://localhost:8080/api/entries/collection/a8af22da-a8f6-4165-bf81-71c2001faa37 HTTP/1.1
+POST http://localhost:8080/api/entries/collection/3c5d2290-4e95-459a-afec-9fce78ce9a80 HTTP/1.1
 content-type: application/json
 
 {
-    "name": "Ein interessanter Listeneintrag (3)"
+    "name": "Fourth entry (1)"
 }
+
+### Modify an entry
+PUT http://localhost:8080/api/entries/2a7a1f1c-f4fe-4b4e-9e11-79a0e353eae0 HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Modified second entry of first collection"
+}
+
+### Delete an entry
+DELETE http://localhost:8080/api/entries/553ffd51-ca9d-4931-b6f4-e3ffa09f7b60

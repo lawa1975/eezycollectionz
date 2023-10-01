@@ -1,5 +1,7 @@
 package de.wagner1975.eezycollectionz;
 
+import java.util.UUID;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 
 import de.wagner1975.eezycollectionz.collection.CollectionController;
 import de.wagner1975.eezycollectionz.collection.CollectionInput;
+import de.wagner1975.eezycollectionz.entry.EntryController;
+import de.wagner1975.eezycollectionz.entry.EntryInput;
 
 @EnableConfigurationProperties(ApplicationProperties.class)
 @SpringBootApplication
@@ -18,11 +22,17 @@ public class Application {
 	}
 
   @Bean
-  public CommandLineRunner demo(CollectionController controller) {
+  public CommandLineRunner demo(CollectionController collectionController, EntryController entryController) {
 		return (args) -> {
-			controller.create(CollectionInput.builder().name("Erste Merkliste").build());
-			controller.create(CollectionInput.builder().name("Zweite Merkliste").build());
-			controller.create(CollectionInput.builder().name("Dritte Merkliste").build());
+			UUID firstCollectionId = collectionController.create(CollectionInput.builder().name("First collection").build()).getId();
+			entryController.create(EntryInput.builder().name("First entry (1)").build(), firstCollectionId);
+			entryController.create(EntryInput.builder().name("Second entry (1)").build(), firstCollectionId);
+			entryController.create(EntryInput.builder().name("Third entry (1)").build(), firstCollectionId);
+
+			UUID secondCollectionId = collectionController.create(CollectionInput.builder().name("Second collection").build()).getId();
+			entryController.create(EntryInput.builder().name("First entry (2)").build(), secondCollectionId);
+			entryController.create(EntryInput.builder().name("Second entry (2)").build(), secondCollectionId);
+			entryController.create(EntryInput.builder().name("Third entry (2)").build(), secondCollectionId);
 		};
 	}
 }
