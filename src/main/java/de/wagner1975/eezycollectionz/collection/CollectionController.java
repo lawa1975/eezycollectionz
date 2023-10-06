@@ -1,8 +1,6 @@
 package de.wagner1975.eezycollectionz.collection;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -17,7 +15,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import de.wagner1975.eezycollectionz.ApplicationProperties;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -26,64 +23,36 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class CollectionController {
 
-  private final CollectionRepository repository;
-  
-  private final ApplicationProperties appProps; 
+  private final CollectionService service;
   
   @GetMapping("")
   public List<Collection> findAll() {
-    return repository.findAll();    
+    return service.findAll();    
   }
 
   @GetMapping("/{id}")
   public Collection findById(@PathVariable UUID id) {
-    return repository.findById(id).orElseThrow(
+    return service.findById(id).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
   }
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("")
   public Collection create(@Valid @RequestBody CollectionInput collectionInput) {
-    UUID generatedId = null;
-    var maxRetries = appProps.maxRetriesToGenerateId();
-    var i = 0;
-    do {
-      generatedId = UUID.randomUUID();      
-      i++;
-    }
-    while (repository.existsById(generatedId) && i <= maxRetries);
-
-    if (i > maxRetries || Objects.isNull(generatedId)) {
-      throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to generate non-existing ID");     
-    }    
-
-    var now = Instant.now();
-
-    var newCollection = Collection.builder()
-      .id(generatedId)
-      .createdAt(now)
-      .lastModifiedAt(now)
-      .name(collectionInput.getName())
-      .build();
-
-    return repository.save(newCollection);
+    return service.create(collectionInput).orElseThrow(
+      () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to generate non-existing ID")); 
   }
 
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public Collection update(@Valid @RequestBody CollectionInput collectionInput, @PathVariable UUID id) {
-    var existingCollection = repository.findById(id).orElseThrow(
+    return service.update(collectionInput, id).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
-
-    existingCollection.setLastModifiedAt(Instant.now());
-    existingCollection.setName(collectionInput.getName());
-
-    return repository.save(existingCollection);
   }
 
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void delete(@PathVariable UUID id) {
-    repository.deleteById(id);
+    service.delete(id);
   }
 }

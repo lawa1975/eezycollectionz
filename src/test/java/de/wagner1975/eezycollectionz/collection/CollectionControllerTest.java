@@ -1,5 +1,6 @@
 package de.wagner1975.eezycollectionz.collection;
 
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,24 +27,22 @@ class CollectionControllerTest {
   private ObjectMapper objectMapper;
 
   @MockBean
-  private CollectionRepository mockRepository;
+  private CollectionService mockService;
 
   @Test
   void shouldCreateWhenPayloadValid() throws Exception {
       var collectionInput = CollectionInput.builder().name("xyz").build(); 
     
-      when(mockRepository.existsById(any())).thenReturn(false);
-      
-      when(mockRepository.save(any()))
-        .thenReturn(Collection.builder()
+      when(mockService.create(any()))
+        .thenReturn(Optional.of(Collection.builder()
           .id(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"))
           .name(collectionInput.getName())
-          .build());
+          .build()));
 
       mockMvc
         .perform(post("/api/collections")
           .contentType(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(CollectionInput.builder().name("xyz").build())))
+          .content(objectMapper.writeValueAsString(collectionInput)))
         .andExpect(MockMvcResultMatchers.status().isCreated());
   }
 }
