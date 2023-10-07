@@ -2,11 +2,10 @@ package de.wagner1975.eezycollectionz.collection;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
-import de.wagner1975.eezycollectionz.ApplicationProperties;
+import de.wagner1975.eezycollectionz.support.GenerateIdException;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -15,7 +14,7 @@ class CollectionService {
   
   private final CollectionRepository repository;
 
-  private final ApplicationProperties appProps;
+  private final CollectionIdProvider provider;
 
   List<Collection> findAll() {
     return repository.findAll();      
@@ -25,30 +24,24 @@ class CollectionService {
     return repository.findById(id);
   }
 
-  Optional<Collection> create(CollectionInput collectionInput) {
-    UUID generatedId = null;
-    var maxRetries = appProps.maxRetriesToGenerateId();
-    var i = 0;
-    do {
-      generatedId = UUID.randomUUID();      
-      i++;
+  Optional<Collection> create(CollectionInput collectionInput) {    
+    try {
+      var generatedId = provider.generateId();
+
+      var now = Instant.now();
+
+      var newCollection = Collection.builder()
+        .id(generatedId)
+        .createdAt(now)
+        .lastModifiedAt(now)
+        .name(collectionInput.getName())
+        .build();
+
+      return Optional.of(repository.save(newCollection));         
     }
-    while (repository.existsById(generatedId) && i <= maxRetries);
-
-    if (i > maxRetries || Objects.isNull(generatedId)) {
-      return Optional.empty();    
+    catch (GenerateIdException ex) {
+      return Optional.empty();
     }
-    
-    var now = Instant.now();
-
-    var newCollection = Collection.builder()
-      .id(generatedId)
-      .createdAt(now)
-      .lastModifiedAt(now)
-      .name(collectionInput.getName())
-      .build();
-
-    return Optional.of(repository.save(newCollection));    
   }
 
   Optional<Collection> update(CollectionInput collectionInput, UUID id) {
