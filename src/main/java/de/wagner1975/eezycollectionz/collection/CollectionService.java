@@ -4,9 +4,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.springframework.stereotype.Service;
-import de.wagner1975.eezycollectionz.support.GenerateIdException;
 import lombok.AllArgsConstructor;
+
+import de.wagner1975.eezycollectionz.support.GenerateIdException;
 
 @Service
 @AllArgsConstructor
@@ -17,7 +19,7 @@ class CollectionService {
   private final CollectionIdProvider provider;
 
   List<Collection> findAll() {
-    return repository.findAll();      
+    return repository.findAll();
   }
 
   Optional<Collection> findById(UUID id) {
@@ -48,7 +50,7 @@ class CollectionService {
     var foundCollection = repository.findById(id);
     
     if (foundCollection.isEmpty()) {
-      return foundCollection;
+      return Optional.empty();
     }
 
     var existingCollection = foundCollection.get();
