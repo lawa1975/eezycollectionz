@@ -1,5 +1,6 @@
 package de.wagner1975.eezycollectionz.entry;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
@@ -23,8 +25,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @ActiveProfiles("test")
 class EntryControllerTest {
 
-  private static final String REQUEST_PATH = "/api/entries/";
-  private static final String REQUEST_WITH_COLLECTION_PATH = REQUEST_PATH + "collection/";
+  private static final String REQUEST_PATH = "/api/entries";
+  private static final String REQUEST_WITH_COLLECTION_PATH = REQUEST_PATH + "/collection";
 
   private static final String DEFAULT_COLLECTION_ID = "992e4141-add3-49ba-875b-d92da4ea9a18";
   private static final String INVALID_COLLECTION_ID = "_";
@@ -46,7 +48,50 @@ class EntryControllerTest {
   private EntryService mockService;
 
   @Test
-  void post_Success_IsCreated() throws Exception {
+  void getByCollectionId_Success_Ok() throws Exception {
+      when(mockService.findByCollectionId(eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
+        .thenReturn(Collections.emptyList());
+
+      mockMvc
+        .perform(get(REQUEST_PATH + "?collectionId=" + DEFAULT_COLLECTION_ID))
+        .andExpect(MockMvcResultMatchers.status().isOk());
+  }
+
+  @Test
+  void getByCollectionId_InvalidCollectionId_BadRequest() throws Exception {
+      mockMvc
+        .perform(get(REQUEST_PATH + "?collectionId=" + INVALID_COLLECTION_ID))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest());
+  }  
+
+  @Test
+  void getById_Success_Ok() throws Exception {
+      when(mockService.findById(eq(UUID.fromString(DEFAULT_ENTRY_ID))))
+        .thenReturn(Optional.of(Entry.builder().name(DEFAULT_NAME).build()));
+
+      mockMvc
+        .perform(get(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID))
+        .andExpect(MockMvcResultMatchers.status().isOk());
+  }
+
+  @Test
+  void getById_InvalidId_BadRequest() throws Exception {
+      mockMvc
+        .perform(get(REQUEST_PATH + "/" + INVALID_ENTRY_ID))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest());
+  }
+
+  @Test
+  void getById_NoEntryReturned_NotFound() throws Exception {
+      when(mockService.findById(any())).thenReturn(Optional.empty());
+
+      mockMvc
+        .perform(get(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID))
+        .andExpect(MockMvcResultMatchers.status().isNotFound());
+  }  
+
+  @Test
+  void post_Success_Created() throws Exception {
       var entryInput = EntryInput.builder().name(DEFAULT_NAME).build(); 
     
       when(mockService.create(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
@@ -56,7 +101,7 @@ class EntryControllerTest {
           .build()));
 
       mockMvc
-        .perform(post(REQUEST_WITH_COLLECTION_PATH + DEFAULT_COLLECTION_ID)
+        .perform(post(REQUEST_WITH_COLLECTION_PATH + "/" + DEFAULT_COLLECTION_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(entryInput)))
         .andExpect(MockMvcResultMatchers.status().isCreated());
@@ -67,25 +112,25 @@ class EntryControllerTest {
       when(mockService.create(any(), any())).thenReturn(Optional.empty());
 
       mockMvc
-        .perform(post(REQUEST_WITH_COLLECTION_PATH + DEFAULT_COLLECTION_ID)
+        .perform(post(REQUEST_WITH_COLLECTION_PATH + "/" + DEFAULT_COLLECTION_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(EntryInput.builder().name(DEFAULT_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
   }
 
   @Test
-  void post_PayloadInvalid_BadRequest() throws Exception {
+  void post_InvalidPayload_BadRequest() throws Exception {
       mockMvc
-        .perform(post(REQUEST_WITH_COLLECTION_PATH + DEFAULT_COLLECTION_ID)
+        .perform(post(REQUEST_WITH_COLLECTION_PATH + "/" + DEFAULT_COLLECTION_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(EntryInput.builder().name(INVALID_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isBadRequest());    
   }
 
   @Test
-  void post_CollectionIdInvalid_BadRequest() throws Exception {
+  void post_InvalidCollectionId_BadRequest() throws Exception {
       mockMvc
-        .perform(post(REQUEST_WITH_COLLECTION_PATH + INVALID_COLLECTION_ID)
+        .perform(post(REQUEST_WITH_COLLECTION_PATH + "/" + INVALID_COLLECTION_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(EntryInput.builder().name(DEFAULT_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isBadRequest());    
@@ -96,28 +141,29 @@ class EntryControllerTest {
       var entryInput = EntryInput.builder().name(MODIFIED_NAME).build();
       var responseEntity = Entry.builder().name(MODIFIED_NAME).build();
 
-      when(mockService.update(any(), eq(UUID.fromString(DEFAULT_ENTRY_ID)))).thenReturn(Optional.of(responseEntity));
+      when(mockService.update(any(), eq(UUID.fromString(DEFAULT_ENTRY_ID))))
+        .thenReturn(Optional.of(responseEntity));
 
       mockMvc
-        .perform(put(REQUEST_PATH + DEFAULT_ENTRY_ID)
+        .perform(put(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(entryInput)))
         .andExpect(MockMvcResultMatchers.status().isOk()); 
   }
 
   @Test
-  void put_PayloadInvalid_BadRequest() throws Exception {
+  void put_InvalidPayload_BadRequest() throws Exception {
       mockMvc
-        .perform(put(REQUEST_PATH + DEFAULT_ENTRY_ID)
+        .perform(put(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(EntryInput.builder().name(INVALID_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isBadRequest());    
   }
 
   @Test
-  void put_IdInvalid_BadRequest() throws Exception {
+  void put_InvalidId_BadRequest() throws Exception {
       mockMvc
-        .perform(put(REQUEST_PATH + INVALID_ENTRY_ID)
+        .perform(put(REQUEST_PATH + "/" + INVALID_ENTRY_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(EntryInput.builder().name(MODIFIED_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isBadRequest());    
@@ -128,7 +174,7 @@ class EntryControllerTest {
       when(mockService.update(any(), any())).thenReturn(Optional.empty());
 
       mockMvc
-        .perform(put(REQUEST_PATH + DEFAULT_ENTRY_ID)
+        .perform(put(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(EntryInput.builder().name(MODIFIED_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -137,14 +183,14 @@ class EntryControllerTest {
   @Test
   void delete_Success_NoContent() throws Exception {
       mockMvc
-        .perform(delete(REQUEST_PATH + DEFAULT_ENTRY_ID))
+        .perform(delete(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID))
         .andExpect(MockMvcResultMatchers.status().isNoContent());
   }
 
   @Test
-  void delete_IdInvalid_BadRequest() throws Exception {
+  void delete_InvalidId_BadRequest() throws Exception {
       mockMvc
-        .perform(delete(REQUEST_PATH + INVALID_ENTRY_ID))
+        .perform(delete(REQUEST_PATH + "/" + INVALID_ENTRY_ID))
         .andExpect(MockMvcResultMatchers.status().isBadRequest());    
   }
 }
