@@ -1,5 +1,6 @@
 package de.wagner1975.eezycollectionz.collection;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +35,9 @@ class CollectionControllerTest {
   private static final String INVALID_NAME = "";
   private static final String MODIFIED_NAME = "other-name";
 
+  private static final String CREATED_AT = "2023-10-05T10:44:09.295558200Z";
+  private static final String LAST_MODIFIED_AT = "2023-10-06T12:51:55.321115900Z";
+
   @Autowired
   private MockMvc mockMvc;
 
@@ -55,11 +59,20 @@ class CollectionControllerTest {
   @Test
   void getById_Success_Ok() throws Exception {
       when(mockService.findById(eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
-        .thenReturn(Optional.of(Collection.builder().name(DEFAULT_NAME).build()));
+        .thenReturn(Optional.of(Collection.builder()
+          .id(UUID.fromString(DEFAULT_COLLECTION_ID))
+          .createdAt(Instant.parse(CREATED_AT))
+          .lastModifiedAt(Instant.parse(LAST_MODIFIED_AT))
+          .name(DEFAULT_NAME)
+          .build()));
 
       mockMvc
         .perform(get(REQUEST_PATH + "/" + DEFAULT_COLLECTION_ID))
-        .andExpect(MockMvcResultMatchers.status().isOk());
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEFAULT_COLLECTION_ID))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.createdAt").value(CREATED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.lastModifiedAt").value(LAST_MODIFIED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(DEFAULT_NAME));
   }
 
   @Test
@@ -85,6 +98,8 @@ class CollectionControllerTest {
       when(mockService.create(any()))
         .thenReturn(Optional.of(Collection.builder()
           .id(UUID.fromString(DEFAULT_COLLECTION_ID))
+          .createdAt(Instant.parse(CREATED_AT))
+          .lastModifiedAt(Instant.parse(CREATED_AT))          
           .name(collectionInput.getName())
           .build()));
 
@@ -92,7 +107,11 @@ class CollectionControllerTest {
         .perform(post(REQUEST_PATH)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(collectionInput)))
-        .andExpect(MockMvcResultMatchers.status().isCreated());
+        .andExpect(MockMvcResultMatchers.status().isCreated())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEFAULT_COLLECTION_ID))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.createdAt").value(CREATED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.lastModifiedAt").value(CREATED_AT))        
+        .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(DEFAULT_NAME));
   }
 
   @Test
@@ -118,16 +137,24 @@ class CollectionControllerTest {
   @Test
   void put_Success_Ok() throws Exception {
       var collectionInput = CollectionInput.builder().name(MODIFIED_NAME).build();
-      var responseEntity = Collection.builder().name(MODIFIED_NAME).build();
 
       when(mockService.update(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
-        .thenReturn(Optional.of(responseEntity));
+        .thenReturn(Optional.of(Collection.builder()
+          .id(UUID.fromString(DEFAULT_COLLECTION_ID))
+          .createdAt(Instant.parse(CREATED_AT))
+          .lastModifiedAt(Instant.parse(LAST_MODIFIED_AT))          
+          .name(MODIFIED_NAME)
+          .build()));
 
       mockMvc
         .perform(put(REQUEST_PATH + "/" + DEFAULT_COLLECTION_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(collectionInput)))
-        .andExpect(MockMvcResultMatchers.status().isOk()); 
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEFAULT_COLLECTION_ID))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.createdAt").value(CREATED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.lastModifiedAt").value(LAST_MODIFIED_AT))        
+        .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(MODIFIED_NAME)); 
   }
 
   @Test
