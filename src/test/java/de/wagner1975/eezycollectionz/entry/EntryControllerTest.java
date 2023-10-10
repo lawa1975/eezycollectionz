@@ -152,20 +152,20 @@ class EntryControllerTest {
   }
 
   @Test
-  void put_InvalidPayload_BadRequest() throws Exception {
-      mockMvc
-        .perform(put(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID)
-          .contentType(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(EntryInput.builder().name(INVALID_NAME).build())))
-        .andExpect(MockMvcResultMatchers.status().isBadRequest());    
-  }
-
-  @Test
   void put_InvalidId_BadRequest() throws Exception {
       mockMvc
         .perform(put(REQUEST_PATH + "/" + INVALID_ENTRY_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(EntryInput.builder().name(MODIFIED_NAME).build())))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest());    
+  }
+
+  @Test
+  void put_InvalidPayload_BadRequest() throws Exception {
+      mockMvc
+        .perform(put(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID)
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(EntryInput.builder().name(INVALID_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isBadRequest());    
   }
 

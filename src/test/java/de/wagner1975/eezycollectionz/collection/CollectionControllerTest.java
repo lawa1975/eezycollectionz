@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @WebMvcTest(CollectionController.class)
 @ActiveProfiles("test")
@@ -31,6 +32,7 @@ class CollectionControllerTest {
 
   private static final String DEFAULT_NAME = "xyz";
   private static final String INVALID_NAME = "";
+  private static final String MODIFIED_NAME = "other-name";
 
   @Autowired
   private MockMvc mockMvc;
@@ -112,6 +114,50 @@ class CollectionControllerTest {
           .content(objectMapper.writeValueAsString(CollectionInput.builder().name(INVALID_NAME).build())))
         .andExpect(MockMvcResultMatchers.status().isBadRequest());    
   }
+
+  @Test
+  void put_Success_Ok() throws Exception {
+      var collectionInput = CollectionInput.builder().name(MODIFIED_NAME).build();
+      var responseEntity = Collection.builder().name(MODIFIED_NAME).build();
+
+      when(mockService.update(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
+        .thenReturn(Optional.of(responseEntity));
+
+      mockMvc
+        .perform(put(REQUEST_PATH + "/" + DEFAULT_COLLECTION_ID)
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(collectionInput)))
+        .andExpect(MockMvcResultMatchers.status().isOk()); 
+  }
+
+  @Test
+  void put_InvalidId_BadRequest() throws Exception {
+      mockMvc
+        .perform(put(REQUEST_PATH + "/" + INVALID_COLLECTION_ID)
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(CollectionInput.builder().name(MODIFIED_NAME).build())))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest());    
+  }  
+
+  @Test
+  void put_InvalidPayload_BadRequest() throws Exception {
+      mockMvc
+        .perform(put(REQUEST_PATH + "/" + DEFAULT_COLLECTION_ID)
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(CollectionInput.builder().name(INVALID_NAME).build())))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest());    
+  }
+
+  @Test
+  void put_FailureOnUpdate_NotFound() throws Exception {
+      when(mockService.update(any(), any())).thenReturn(Optional.empty());
+
+      mockMvc
+        .perform(put(REQUEST_PATH + "/" + DEFAULT_COLLECTION_ID)
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(CollectionInput.builder().name(MODIFIED_NAME).build())))
+        .andExpect(MockMvcResultMatchers.status().isNotFound());
+  }   
 
   @Test
   void delete_Success_NoContent() throws Exception {
