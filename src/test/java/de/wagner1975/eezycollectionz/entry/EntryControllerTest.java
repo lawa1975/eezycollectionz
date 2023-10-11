@@ -1,5 +1,6 @@
 package de.wagner1975.eezycollectionz.entry;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +38,9 @@ class EntryControllerTest {
   private static final String DEFAULT_NAME = "uvw";
   private static final String INVALID_NAME = "";
   private static final String MODIFIED_NAME = "other-name";
+
+  private static final String CREATED_AT = "2023-10-05T10:44:09.295558200Z";
+  private static final String LAST_MODIFIED_AT = "2023-10-06T12:51:55.321115900Z";  
   
   @Autowired
   private MockMvc mockMvc;
@@ -67,11 +71,20 @@ class EntryControllerTest {
   @Test
   void getById_Success_Ok() throws Exception {
       when(mockService.findById(eq(UUID.fromString(DEFAULT_ENTRY_ID))))
-        .thenReturn(Optional.of(Entry.builder().name(DEFAULT_NAME).build()));
+        .thenReturn(Optional.of(Entry.builder()
+          .id(UUID.fromString(DEFAULT_ENTRY_ID))
+          .createdAt(Instant.parse(CREATED_AT))
+          .lastModifiedAt(Instant.parse(LAST_MODIFIED_AT))          
+          .name(DEFAULT_NAME)
+          .build()));
 
       mockMvc
         .perform(get(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID))
-        .andExpect(MockMvcResultMatchers.status().isOk());
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEFAULT_ENTRY_ID))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.createdAt").value(CREATED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.lastModifiedAt").value(LAST_MODIFIED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(DEFAULT_NAME));      
   }
 
   @Test
@@ -97,6 +110,8 @@ class EntryControllerTest {
       when(mockService.create(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
         .thenReturn(Optional.of(Entry.builder()
           .id(UUID.fromString(DEFAULT_ENTRY_ID))
+          .createdAt(Instant.parse(CREATED_AT))
+          .lastModifiedAt(Instant.parse(CREATED_AT))            
           .name(entryInput.getName())
           .build()));
 
@@ -104,7 +119,11 @@ class EntryControllerTest {
         .perform(post(REQUEST_WITH_COLLECTION_PATH + "/" + DEFAULT_COLLECTION_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(entryInput)))
-        .andExpect(MockMvcResultMatchers.status().isCreated());
+        .andExpect(MockMvcResultMatchers.status().isCreated())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEFAULT_ENTRY_ID))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.createdAt").value(CREATED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.lastModifiedAt").value(CREATED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(DEFAULT_NAME));          
   }
 
   @Test
@@ -139,16 +158,24 @@ class EntryControllerTest {
   @Test
   void put_Success_Ok() throws Exception {
       var entryInput = EntryInput.builder().name(MODIFIED_NAME).build();
-      var responseEntity = Entry.builder().name(MODIFIED_NAME).build();
 
       when(mockService.update(any(), eq(UUID.fromString(DEFAULT_ENTRY_ID))))
-        .thenReturn(Optional.of(responseEntity));
+        .thenReturn(Optional.of(Entry.builder()
+          .id(UUID.fromString(DEFAULT_ENTRY_ID))
+          .createdAt(Instant.parse(CREATED_AT))
+          .lastModifiedAt(Instant.parse(LAST_MODIFIED_AT))           
+          .name(MODIFIED_NAME)
+          .build()));
 
       mockMvc
         .perform(put(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID)
           .contentType(MediaType.APPLICATION_JSON)
           .content(objectMapper.writeValueAsString(entryInput)))
-        .andExpect(MockMvcResultMatchers.status().isOk()); 
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(DEFAULT_ENTRY_ID))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.createdAt").value(CREATED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.lastModifiedAt").value(LAST_MODIFIED_AT))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(MODIFIED_NAME));   
   }
 
   @Test
