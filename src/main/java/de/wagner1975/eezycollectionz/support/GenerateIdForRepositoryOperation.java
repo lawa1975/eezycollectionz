@@ -15,14 +15,16 @@ public class GenerateIdForRepositoryOperation<ID> {
 
   public ID execute() {
     ID generatedId = null;
+    var suitable = false;
     var i = 0;
     do {
       generatedId = generator.generate();
+      suitable = Objects.nonNull(generatedId) && !repository.existsById(generatedId);
       i++;
     }
-    while (repository.existsById(generatedId) && i <= maxRetries);
+    while (!suitable && i <= maxRetries);
 
-    if (i > maxRetries + 1 || Objects.isNull(generatedId)) {
+    if (!suitable) {
       throw new GenerateIdException();
     }
 
