@@ -7,36 +7,33 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 class CollectionServiceTest {
 
-  private CollectionService objectUnderTest;
-
   @Mock
   private CollectionRepository mockRepository;
   
   @Mock
   private CollectionIdProvider mockIdProvider;
-  
-  @BeforeEach
-  void beforeEach() {
-    objectUnderTest = new CollectionService(mockRepository, mockIdProvider);
-  }
+
+  @InjectMocks
+  private CollectionService objectUnderTest;
 
   @Test
   void findAll_Success_ReturnsList() {
-    UUID id1 = UUID.fromString("992e4141-add3-49ba-875b-d92da4ea9a18");
-    UUID id2 = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var id1 = UUID.fromString("992e4141-add3-49ba-875b-d92da4ea9a18");
+    var id2 = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
 
     when(mockRepository.findAll())
       .thenReturn(List.of(
@@ -53,7 +50,7 @@ class CollectionServiceTest {
 
   @Test
   void findById_IsFound_ReturnsCollection() {
-    UUID id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
 
     when(mockRepository.findById(eq(id))).thenReturn(Optional.of(Collection.builder().id(id).build()));
 
@@ -72,5 +69,31 @@ class CollectionServiceTest {
 
     assertNotNull(result);
     assertTrue(result.isEmpty());  
-  }  
+  }
+  
+  @Test
+  void create_Saved_ReturnsCollection() {
+    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var name = "Shiny stuff";
+
+    when(mockIdProvider.generateId()).thenReturn(id);
+    when(mockRepository.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var millisBefore = Instant.now().toEpochMilli();
+    var result = objectUnderTest.create(CollectionInput.builder().name(name).build());
+    var millisAfter = Instant.now().toEpochMilli();
+
+    assertNotNull(result);
+    assertTrue(result.isPresent());
+    
+    var savedCollection = result.get();
+    assertEquals(id, savedCollection.getId());
+    assertEquals(name, savedCollection.getName());
+
+    var createdAt = savedCollection.getCreatedAt();
+    var lastModifiedAt = savedCollection.getLastModifiedAt();
+    assertNotNull(createdAt);  
+    assertTrue(createdAt.toEpochMilli() >= millisBefore && createdAt.toEpochMilli() <= millisAfter);
+    assertEquals(createdAt, lastModifiedAt);
+  }
 }
