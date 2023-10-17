@@ -2,6 +2,7 @@ package de.wagner1975.eezycollectionz.collection;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +24,9 @@ class CollectionService {
   }
 
   Optional<Collection> findById(UUID id) {
+    if (Objects.isNull(id)) {
+      throw new IllegalArgumentException("id is null");
+    }
     return repository.findById(id);
   }
 
@@ -62,6 +66,9 @@ class CollectionService {
   }
 
   void delete(UUID id) {
+    if (Objects.isNull(id)) {
+      throw new IllegalArgumentException("id is null");
+    }    
     repository.deleteById(id);
   }  
 }

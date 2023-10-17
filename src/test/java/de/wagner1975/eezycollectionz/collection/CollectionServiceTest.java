@@ -2,6 +2,7 @@ package de.wagner1975.eezycollectionz.collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -72,7 +73,15 @@ class CollectionServiceTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());  
   }
-  
+
+  @Test
+  void findById_GivenIdIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.findById(null);
+    });
+    assertEquals("id is null", exception.getMessage());     
+  }  
+
   @Test
   void create_Saved_ReturnsCollection() {
     var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
