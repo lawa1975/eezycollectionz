@@ -39,7 +39,7 @@ class CollectionService {
         .name(collectionInput.getName())
         .build();
 
-      return Optional.of(repository.save(newCollection));         
+      return Optional.ofNullable(repository.save(newCollection));         
     }
     catch (GenerateIdException ex) {
       return Optional.empty();
@@ -58,7 +58,7 @@ class CollectionService {
     existingCollection.setLastModifiedAt(Instant.now());
     existingCollection.setName(collectionInput.getName());
 
-    return Optional.of(repository.save(existingCollection));
+    return Optional.ofNullable(repository.save(existingCollection));
   }
 
   void delete(UUID id) {

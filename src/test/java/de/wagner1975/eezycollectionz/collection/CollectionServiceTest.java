@@ -18,6 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import de.wagner1975.eezycollectionz.support.GenerateIdException;
+
 @ExtendWith(SpringExtension.class)
 class CollectionServiceTest {
 
@@ -95,5 +97,26 @@ class CollectionServiceTest {
     assertNotNull(createdAt);  
     assertTrue(createdAt.toEpochMilli() >= millisBefore && createdAt.toEpochMilli() <= millisAfter);
     assertEquals(createdAt, lastModifiedAt);
+  }
+
+  @Test
+  void create_GeneratedIdThrowsException_ReturnsEmpty() {
+    when(mockIdProvider.generateId()).thenThrow(new GenerateIdException());
+
+    var result = objectUnderTest.create(CollectionInput.builder().name("abc").build());
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());    
+  }
+
+  @Test
+  void create_SaveReturnsNull_ReturnsEmpty() {
+    when(mockIdProvider.generateId()).thenReturn(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+    when(mockRepository.save(any(Collection.class))).thenReturn(null);
+
+    var result = objectUnderTest.create(CollectionInput.builder().name("abc").build());
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
   }
 }
