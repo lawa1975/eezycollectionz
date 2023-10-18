@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -65,7 +66,7 @@ class CollectionServiceTest {
   }
 
   @Test
-  void findById_IsNotFound_ReturnsEmpty() {
+  void findById_NotFound_ReturnsEmpty() {
     when(mockRepository.findById(any())).thenReturn(Optional.empty());
 
     var result = objectUnderTest.findById(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
@@ -127,5 +128,20 @@ class CollectionServiceTest {
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void delete_GivenIdIsUUID_MethodInvoked() {
+    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    objectUnderTest.delete(id);
+    verify(mockRepository).deleteById(id);
+  }
+
+  @Test
+  void delete_GivenIdIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.delete(null);
+    });
+    assertEquals("id is null", exception.getMessage());     
   }
 }
