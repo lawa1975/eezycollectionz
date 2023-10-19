@@ -1,6 +1,7 @@
 package de.wagner1975.eezycollectionz.collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -128,6 +129,44 @@ class CollectionServiceTest {
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void update_Saved_ReturnsCollection() {
+    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    
+    var originalInstant = Instant.parse("2010-10-10T11:11:11.295558200Z");
+    var originalCollection = Collection.builder()
+      .id(id)
+      .createdAt(originalInstant)
+      .lastModifiedAt(originalInstant)
+      .name("Shiny stuff")
+      .build();
+
+    var modifiedName = "New words";
+
+    when(mockRepository.findById(eq(id))).thenReturn(Optional.of(originalCollection));
+    when(mockRepository.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));    
+
+    var millisBefore = Instant.now().toEpochMilli();
+    var result = objectUnderTest.update(CollectionInput.builder().name(modifiedName).build(), id);
+    var millisAfter = Instant.now().toEpochMilli();
+
+    assertNotNull(result);
+    assertTrue(result.isPresent());
+    
+    var savedCollection = result.get();
+    assertEquals(id, savedCollection.getId());
+    assertEquals(modifiedName, savedCollection.getName());
+
+    var createdAt = savedCollection.getCreatedAt();
+    assertNotNull(createdAt);
+    assertEquals(originalInstant, createdAt); 
+
+    var lastModifiedAt = savedCollection.getLastModifiedAt();
+    assertNotNull(lastModifiedAt);
+    assertNotEquals(originalInstant, lastModifiedAt); 
+    assertTrue(lastModifiedAt.toEpochMilli() >= millisBefore && lastModifiedAt.toEpochMilli() <= millisAfter);
   }
 
   @Test
