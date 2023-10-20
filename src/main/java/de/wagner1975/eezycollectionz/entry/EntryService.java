@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.Preconditions;
+
 import lombok.AllArgsConstructor;
 
 import de.wagner1975.eezycollectionz.collection.Collection;
@@ -25,9 +28,7 @@ class EntryService {
   }
 
   Optional<Entry> findById(UUID id) {
-    if (Objects.isNull(id)) {
-      throw new IllegalArgumentException("id is null");
-    }    
+    Preconditions.checkArgument(Objects.nonNull(id), "id is null");   
     return repository.findById(id);
   }
 

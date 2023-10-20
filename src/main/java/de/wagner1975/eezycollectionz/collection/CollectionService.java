@@ -7,6 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.Preconditions;
+
 import lombok.AllArgsConstructor;
 
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
@@ -24,9 +27,7 @@ class CollectionService {
   }
 
   Optional<Collection> findById(UUID id) {
-    if (Objects.isNull(id)) {
-      throw new IllegalArgumentException("id is null");
-    }
+    Preconditions.checkArgument(Objects.nonNull(id), "id is null");
     return repository.findById(id);
   }
 
@@ -66,9 +67,7 @@ class CollectionService {
   }
 
   void delete(UUID id) {
-    if (Objects.isNull(id)) {
-      throw new IllegalArgumentException("id is null");
-    }    
+    Preconditions.checkArgument(Objects.nonNull(id), "id is null");
     repository.deleteById(id);
   }  
 }
