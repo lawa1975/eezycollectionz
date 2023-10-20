@@ -2,6 +2,7 @@ package de.wagner1975.eezycollectionz.entry;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,6 +25,9 @@ class EntryService {
   }
 
   Optional<Entry> findById(UUID id) {
+    if (Objects.isNull(id)) {
+      throw new IllegalArgumentException("id is null");
+    }    
     return repository.findById(id);
   }
 
