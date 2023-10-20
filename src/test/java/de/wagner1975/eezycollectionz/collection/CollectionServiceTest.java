@@ -170,6 +170,32 @@ class CollectionServiceTest {
   }
 
   @Test
+  void update_NotFound_ReturnsEmpty() {
+    when(mockRepository.findById(any())).thenReturn(Optional.empty());
+
+    var result = objectUnderTest.update(
+      CollectionInput.builder().name("New words").build(),
+      UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void update_SaveReturnsNull_ReturnsEmpty() {
+    when(mockRepository.findById(any())).thenReturn(Optional.of(Collection.builder()
+      .id(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"))
+      .name("Shiny stuff")
+      .build()));    
+    when(mockRepository.save(any(Collection.class))).thenReturn(null);
+
+    var result = objectUnderTest.create(CollectionInput.builder().name("New words").build());
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }  
+
+  @Test
   void delete_GivenIdIsUUID_MethodInvoked() {
     var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
     objectUnderTest.delete(id);
