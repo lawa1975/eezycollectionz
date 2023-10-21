@@ -29,7 +29,7 @@ class EntryService {
   }
 
   Optional<Entry> findById(UUID id) {
-    Preconditions.checkArgument(Objects.nonNull(id), "id is null");   
+    Preconditions.checkArgument(Objects.nonNull(id), "id is null");
     return repository.findById(id);
   }
 
@@ -70,6 +70,7 @@ class EntryService {
   }  
 
   void delete(UUID id) {
+    Preconditions.checkArgument(Objects.nonNull(id), "id is null");
     repository.deleteById(id);
   } 
 }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -96,5 +97,20 @@ public class EntryServiceTest {
       objectUnderTest.findById(null);
     });
     assertEquals("id is null", exception.getMessage());     
-  }   
+  }
+
+  @Test
+  void delete_GivenIdIsUUID_MethodInvoked() {
+    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    objectUnderTest.delete(id);
+    verify(mockRepository).deleteById(id);
+  }
+
+  @Test
+  void delete_GivenIdIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.delete(null);
+    });
+    assertEquals("id is null", exception.getMessage());     
+  }
 }
