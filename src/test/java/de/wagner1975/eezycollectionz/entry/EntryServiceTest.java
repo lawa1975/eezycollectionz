@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +30,43 @@ public class EntryServiceTest {
   @InjectMocks
   private EntryService objectUnderTest;
   
+  @Test
+  void findByCollectionId_IsFound_ReturnsList() {
+    var collectionId = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
+    var id1 = UUID.fromString("992e4141-add3-49ba-875b-d92da4ea9a18");
+    var id2 = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+
+    when(mockRepository.findByCollectionId(eq(collectionId)))
+      .thenReturn(List.of(
+        Entry.builder().id(id1).build(),
+        Entry.builder().id(id2).build()));
+
+    var result = objectUnderTest.findByCollectionId(collectionId);
+
+    assertNotNull(result);
+    assertEquals(result.size(), 2);
+    assertEquals(result.get(0).getId(), id1);
+    assertEquals(result.get(1).getId(), id2); 
+  }
+
+  @Test
+  void findByCollectionId_NotFound_ReturnsEmpty() {
+    when(mockRepository.findByCollectionId(any())).thenReturn(List.of());
+
+    var result = objectUnderTest.findByCollectionId(UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01"));
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void findByCollectionId_GivenCollectionIdIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.findByCollectionId(null);
+    });
+    assertEquals("collectionId is null", exception.getMessage());     
+  }  
+
   @Test
   void findById_IsFound_ReturnsCollection() {
     var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");

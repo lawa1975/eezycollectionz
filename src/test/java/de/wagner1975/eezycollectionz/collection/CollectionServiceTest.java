@@ -45,12 +45,12 @@ class CollectionServiceTest {
         Collection.builder().id(id1).build(),
         Collection.builder().id(id2).build()));
       
-      var results = objectUnderTest.findAll();
+    var results = objectUnderTest.findAll();
 
-      assertNotNull(results);
-      assertEquals(results.size(), 2);
-      assertEquals(results.get(0).getId(), id1);
-      assertEquals(results.get(1).getId(), id2);
+    assertNotNull(results);
+    assertEquals(results.size(), 2);
+    assertEquals(results.get(0).getId(), id1);
+    assertEquals(results.get(1).getId(), id2);
   }
 
   @Test

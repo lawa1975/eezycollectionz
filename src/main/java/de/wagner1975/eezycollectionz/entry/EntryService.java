@@ -24,6 +24,7 @@ class EntryService {
   private final EntryIdProvider provider;
 
   List<Entry> findByCollectionId(UUID collectionId) {
+    Preconditions.checkArgument(Objects.nonNull(collectionId), "collectionId is null");   
     return repository.findByCollectionId(collectionId);   
   }
 
