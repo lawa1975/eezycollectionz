@@ -34,20 +34,22 @@ class EntryService {
   }
 
   Optional<Entry> create(EntryInput entryInput, UUID collectionId) {
+    Preconditions.checkArgument(Objects.nonNull(collectionId), "collectionId is null");
+
     try {
       var generatedId = provider.generateId();
 
       var now = Instant.now();
 
-    var newEntry = Entry.builder()
-      .id(generatedId)
-      .createdAt(now)
-      .lastModifiedAt(now)
-      .name(entryInput.getName())
-      .collection(Collection.builder().id(collectionId).build())
-      .build();
+      var newEntry = Entry.builder()
+        .id(generatedId)
+        .createdAt(now)
+        .lastModifiedAt(now)
+        .name(entryInput.getName())
+        .collection(Collection.builder().id(collectionId).build())
+        .build();
 
-      return Optional.of(repository.save(newEntry));         
+      return Optional.ofNullable(repository.save(newEntry));         
     }
     catch (GenerateIdException ex) {
       return Optional.empty();
@@ -66,7 +68,7 @@ class EntryService {
     existingEntry.setLastModifiedAt(Instant.now());
     existingEntry.setName(entryInput.getName());
 
-    return Optional.of(repository.save(existingEntry));
+    return Optional.ofNullable(repository.save(existingEntry));
   }  
 
   void delete(UUID id) {

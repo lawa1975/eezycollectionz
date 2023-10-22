@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import de.wagner1975.eezycollectionz.support.GenerateIdException;
 
 @ExtendWith(SpringExtension.class)
 public class EntryServiceTest {
@@ -98,6 +101,70 @@ public class EntryServiceTest {
     });
     assertEquals("id is null", exception.getMessage());     
   }
+
+  @Test
+  void create_Saved_ReturnsEntry() {
+    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var name = "Shiny stuff";
+    var collectionId = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
+
+    when(mockIdProvider.generateId()).thenReturn(id);
+    when(mockRepository.save(any(Entry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var millisBefore = Instant.now().toEpochMilli();
+    var result = objectUnderTest.create(EntryInput.builder().name(name).build(), collectionId);
+    var millisAfter = Instant.now().toEpochMilli();
+
+    assertNotNull(result);
+    assertTrue(result.isPresent());
+    
+    var savedEntry = result.get();
+    assertEquals(id, savedEntry.getId());
+    assertEquals(name, savedEntry.getName());
+
+    var createdAt = savedEntry.getCreatedAt();
+    var lastModifiedAt = savedEntry.getLastModifiedAt();
+    assertNotNull(createdAt);  
+    assertTrue(createdAt.toEpochMilli() >= millisBefore && createdAt.toEpochMilli() <= millisAfter);
+    assertEquals(createdAt, lastModifiedAt);
+
+    var collection = savedEntry.getCollection();
+    assertNotNull(collection);
+    assertEquals(collectionId, collection.getId());
+  }
+
+  @Test
+  void create_GenerateIdThrowsException_ReturnsEmpty() {
+    when(mockIdProvider.generateId()).thenThrow(new GenerateIdException());
+
+    var result = objectUnderTest.create(
+      EntryInput.builder().name("xyz").build(),
+      UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01"));
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());    
+  }
+
+  @Test
+  void create_SaveReturnsNull_ReturnsEmpty() {
+    when(mockIdProvider.generateId()).thenReturn(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+    when(mockRepository.save(any(Entry.class))).thenReturn(null);
+
+    var result = objectUnderTest.create(
+      EntryInput.builder().name("xyz").build(),
+      UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01"));
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void create_GivenCollectionIdIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.create(EntryInput.builder().name("xyz").build(), null);
+    });
+    assertEquals("collectionId is null", exception.getMessage());     
+  } 
 
   @Test
   void delete_GivenIdIsUUID_MethodInvoked() {
