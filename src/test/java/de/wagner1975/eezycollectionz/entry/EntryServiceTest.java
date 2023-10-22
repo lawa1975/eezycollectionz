@@ -25,6 +25,9 @@ import de.wagner1975.eezycollectionz.support.GenerateIdException;
 @ExtendWith(SpringExtension.class)
 public class EntryServiceTest {
 
+  private static final UUID DEFAULT_COLLECTION_ID = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
+  private static final UUID DEFAULT_ENTRY_ID = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+
   @Mock
   private EntryRepository mockRepository;
   
@@ -36,16 +39,15 @@ public class EntryServiceTest {
   
   @Test
   void findByCollectionId_IsFound_ReturnsList() {
-    var collectionId = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
-    var id1 = UUID.fromString("992e4141-add3-49ba-875b-d92da4ea9a18");
-    var id2 = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var id1 = UUID.fromString("00000001-1111-0000-0000-000000000001");
+    var id2 = UUID.fromString("00000002-2222-0000-0000-000000000002");
 
-    when(mockRepository.findByCollectionId(eq(collectionId)))
+    when(mockRepository.findByCollectionId(eq(DEFAULT_COLLECTION_ID)))
       .thenReturn(List.of(
         Entry.builder().id(id1).build(),
         Entry.builder().id(id2).build()));
 
-    var result = objectUnderTest.findByCollectionId(collectionId);
+    var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID);
 
     assertNotNull(result);
     assertEquals(result.size(), 2);
@@ -57,7 +59,7 @@ public class EntryServiceTest {
   void findByCollectionId_NotFound_ReturnsEmpty() {
     when(mockRepository.findByCollectionId(any())).thenReturn(List.of());
 
-    var result = objectUnderTest.findByCollectionId(UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01"));
+    var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -73,7 +75,7 @@ public class EntryServiceTest {
 
   @Test
   void findById_IsFound_ReturnsCollection() {
-    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var id = DEFAULT_ENTRY_ID;
 
     when(mockRepository.findById(eq(id))).thenReturn(Optional.of(Entry.builder().id(id).build()));
 
@@ -88,7 +90,7 @@ public class EntryServiceTest {
   void findById_NotFound_ReturnsEmpty() {
     when(mockRepository.findById(any())).thenReturn(Optional.empty());
 
-    var result = objectUnderTest.findById(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+    var result = objectUnderTest.findById(DEFAULT_ENTRY_ID);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());  
@@ -104,22 +106,20 @@ public class EntryServiceTest {
 
   @Test
   void create_Saved_ReturnsEntry() {
-    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
     var name = "Shiny stuff";
-    var collectionId = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
 
-    when(mockIdProvider.generateId()).thenReturn(id);
+    when(mockIdProvider.generateId()).thenReturn(DEFAULT_ENTRY_ID);
     when(mockRepository.save(any(Entry.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     var millisBefore = Instant.now().toEpochMilli();
-    var result = objectUnderTest.create(EntryInput.builder().name(name).build(), collectionId);
+    var result = objectUnderTest.create(EntryInput.builder().name(name).build(), DEFAULT_COLLECTION_ID);
     var millisAfter = Instant.now().toEpochMilli();
 
     assertNotNull(result);
     assertTrue(result.isPresent());
     
     var savedEntry = result.get();
-    assertEquals(id, savedEntry.getId());
+    assertEquals(DEFAULT_ENTRY_ID, savedEntry.getId());
     assertEquals(name, savedEntry.getName());
 
     var createdAt = savedEntry.getCreatedAt();
@@ -130,7 +130,7 @@ public class EntryServiceTest {
 
     var collection = savedEntry.getCollection();
     assertNotNull(collection);
-    assertEquals(collectionId, collection.getId());
+    assertEquals(DEFAULT_COLLECTION_ID, collection.getId());
   }
 
   @Test
@@ -139,7 +139,7 @@ public class EntryServiceTest {
 
     var result = objectUnderTest.create(
       EntryInput.builder().name("xyz").build(),
-      UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01"));
+      DEFAULT_COLLECTION_ID);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());    
@@ -147,12 +147,12 @@ public class EntryServiceTest {
 
   @Test
   void create_SaveReturnsNull_ReturnsEmpty() {
-    when(mockIdProvider.generateId()).thenReturn(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+    when(mockIdProvider.generateId()).thenReturn(DEFAULT_ENTRY_ID);
     when(mockRepository.save(any(Entry.class))).thenReturn(null);
 
     var result = objectUnderTest.create(
       EntryInput.builder().name("xyz").build(),
-      UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01"));
+      DEFAULT_COLLECTION_ID);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -168,9 +168,8 @@ public class EntryServiceTest {
 
   @Test
   void delete_GivenIdIsUUID_MethodInvoked() {
-    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
-    objectUnderTest.delete(id);
-    verify(mockRepository).deleteById(id);
+    objectUnderTest.delete(DEFAULT_ENTRY_ID);
+    verify(mockRepository).deleteById(DEFAULT_ENTRY_ID);
   }
 
   @Test
