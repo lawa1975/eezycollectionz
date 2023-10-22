@@ -7,9 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
-
 import com.google.common.base.Preconditions;
-
 import lombok.AllArgsConstructor;
 
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
@@ -31,7 +29,9 @@ class CollectionService {
     return repository.findById(id);
   }
 
-  Optional<Collection> create(CollectionInput collectionInput) {    
+  Optional<Collection> create(CollectionInput collectionInput) { 
+    Preconditions.checkArgument(Objects.nonNull(collectionInput), "collectionInput is null");
+
     try {
       var generatedId = provider.generateId();
 
@@ -52,6 +52,9 @@ class CollectionService {
   }
 
   Optional<Collection> update(CollectionInput collectionInput, UUID id) {
+    Preconditions.checkArgument(Objects.nonNull(collectionInput), "collectionInput is null");
+    Preconditions.checkArgument(Objects.nonNull(id), "id is null");
+
     var foundCollection = repository.findById(id);
     
     if (foundCollection.isEmpty()) {
