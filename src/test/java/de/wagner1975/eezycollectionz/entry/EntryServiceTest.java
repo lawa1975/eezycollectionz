@@ -161,6 +161,14 @@ public class EntryServiceTest {
   }
 
   @Test
+  void create_GivenEntryInputIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.create(null, DEFAULT_COLLECTION_ID);
+    });
+    assertEquals("entryInput is null", exception.getMessage());     
+  }
+
+  @Test
   void create_GivenCollectionIdIsNull_ThrowsException() {
     var exception = assertThrows(IllegalArgumentException.class, () -> {
       objectUnderTest.create(EntryInput.builder().name("xyz").build(), null);
@@ -228,7 +236,23 @@ public class EntryServiceTest {
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
-  }   
+  }
+
+  @Test
+  void update_GivenEntryInputIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.update(null, DEFAULT_ENTRY_ID);
+    });
+    assertEquals("entryInput is null", exception.getMessage());     
+  }
+
+  @Test
+  void update_GivenIdIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.update(EntryInput.builder().name("New words").build(), null);
+    });
+    assertEquals("id is null", exception.getMessage());     
+  }  
 
   @Test
   void delete_GivenIdIsUUID_MethodInvoked() {

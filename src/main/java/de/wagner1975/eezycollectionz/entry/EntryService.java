@@ -34,6 +34,7 @@ class EntryService {
   }
 
   Optional<Entry> create(EntryInput entryInput, UUID collectionId) {
+    Preconditions.checkArgument(Objects.nonNull(entryInput), "entryInput is null");    
     Preconditions.checkArgument(Objects.nonNull(collectionId), "collectionId is null");
 
     try {
@@ -57,6 +58,9 @@ class EntryService {
   }
 
   Optional<Entry> update(EntryInput entryInput, UUID id) {
+    Preconditions.checkArgument(Objects.nonNull(entryInput), "entryInput is null");
+    Preconditions.checkArgument(Objects.nonNull(id), "id is null");
+
     var foundEntry = repository.findById(id);
     
     if (foundEntry.isEmpty()) {
