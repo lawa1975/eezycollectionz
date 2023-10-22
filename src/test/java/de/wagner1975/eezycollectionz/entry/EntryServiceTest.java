@@ -1,6 +1,7 @@
 package de.wagner1975.eezycollectionz.entry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import de.wagner1975.eezycollectionz.collection.Collection;
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
 
 @ExtendWith(SpringExtension.class)
@@ -165,6 +167,68 @@ public class EntryServiceTest {
     });
     assertEquals("collectionId is null", exception.getMessage());     
   } 
+
+  @Test
+  void update_Saved_ReturnsEntry() {
+    var originalInstant = Instant.parse("2010-10-10T11:11:11.295558200Z");
+    var originalEntry = Entry.builder()
+      .id(DEFAULT_ENTRY_ID)
+      .createdAt(originalInstant)
+      .lastModifiedAt(originalInstant)
+      .name("Shiny stuff")
+      .collection(Collection.builder().id(DEFAULT_COLLECTION_ID).build())
+      .build();
+      
+    var modifiedName = "New words";
+
+    when(mockRepository.findById(eq(DEFAULT_ENTRY_ID))).thenReturn(Optional.of(originalEntry));
+    when(mockRepository.save(any(Entry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    
+    var millisBefore = Instant.now().toEpochMilli();
+    var result = objectUnderTest.update(EntryInput.builder().name(modifiedName).build(), DEFAULT_ENTRY_ID);
+    var millisAfter = Instant.now().toEpochMilli();
+
+    assertNotNull(result);
+    assertTrue(result.isPresent());
+    
+    var savedEntry = result.get();
+    assertEquals(DEFAULT_ENTRY_ID, savedEntry.getId());
+    assertEquals(modifiedName, savedEntry.getName());
+
+    var createdAt = savedEntry.getCreatedAt();
+    assertNotNull(createdAt);
+    assertEquals(originalInstant, createdAt); 
+
+    var lastModifiedAt = savedEntry.getLastModifiedAt();
+    assertNotNull(lastModifiedAt);
+    assertNotEquals(originalInstant, lastModifiedAt); 
+    assertTrue(lastModifiedAt.toEpochMilli() >= millisBefore && lastModifiedAt.toEpochMilli() <= millisAfter);
+
+    var relatedCollection = savedEntry.getCollection();
+    assertNotNull(relatedCollection);
+    assertEquals(DEFAULT_COLLECTION_ID, relatedCollection.getId());
+  }
+
+  @Test
+  void update_NotFound_ReturnsEmpty() {
+    when(mockRepository.findById(any())).thenReturn(Optional.empty());
+
+    var result = objectUnderTest.update(EntryInput.builder().name("New words").build(), DEFAULT_ENTRY_ID);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void update_SaveReturnsNull_ReturnsEmpty() {
+    when(mockRepository.findById(eq(DEFAULT_ENTRY_ID))).thenReturn(Optional.of(Entry.builder().id(DEFAULT_ENTRY_ID).build()));    
+    when(mockRepository.save(any(Entry.class))).thenReturn(null);
+
+    var result = objectUnderTest.update(EntryInput.builder().name("New words").build(), DEFAULT_ENTRY_ID);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }   
 
   @Test
   void delete_GivenIdIsUUID_MethodInvoked() {
