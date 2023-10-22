@@ -45,12 +45,12 @@ class CollectionServiceTest {
         Collection.builder().id(id1).build(),
         Collection.builder().id(id2).build()));
       
-    var results = objectUnderTest.findAll();
+    var result = objectUnderTest.findAll();
 
-    assertNotNull(results);
-    assertEquals(results.size(), 2);
-    assertEquals(results.get(0).getId(), id1);
-    assertEquals(results.get(1).getId(), id2);
+    assertNotNull(result);
+    assertEquals(result.size(), 2);
+    assertEquals(result.get(0).getId(), id1);
+    assertEquals(result.get(1).getId(), id2);
   }
 
   @Test
@@ -111,7 +111,7 @@ class CollectionServiceTest {
   }
 
   @Test
-  void create_GeneratedIdThrowsException_ReturnsEmpty() {
+  void create_GenerateIdThrowsException_ReturnsEmpty() {
     when(mockIdProvider.generateId()).thenThrow(new GenerateIdException());
 
     var result = objectUnderTest.create(CollectionInput.builder().name("abc").build());
