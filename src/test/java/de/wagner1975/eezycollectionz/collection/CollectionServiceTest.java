@@ -26,6 +26,8 @@ import de.wagner1975.eezycollectionz.support.GenerateIdException;
 @ExtendWith(SpringExtension.class)
 class CollectionServiceTest {
 
+  private static final UUID DEFAULT_COLLECTION_ID = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
+
   @Mock
   private CollectionRepository mockRepository;
   
@@ -37,8 +39,8 @@ class CollectionServiceTest {
 
   @Test
   void findAll_Success_ReturnsList() {
-    var id1 = UUID.fromString("992e4141-add3-49ba-875b-d92da4ea9a18");
-    var id2 = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var id1 = UUID.fromString("00000001-1111-0000-0000-000000000001");
+    var id2 = UUID.fromString("00000002-2222-0000-0000-000000000002");
 
     when(mockRepository.findAll())
       .thenReturn(List.of(
@@ -55,7 +57,7 @@ class CollectionServiceTest {
 
   @Test
   void findById_IsFound_ReturnsCollection() {
-    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+    var id = DEFAULT_COLLECTION_ID;
 
     when(mockRepository.findById(eq(id))).thenReturn(Optional.of(Collection.builder().id(id).build()));
 
@@ -70,7 +72,7 @@ class CollectionServiceTest {
   void findById_NotFound_ReturnsEmpty() {
     when(mockRepository.findById(any())).thenReturn(Optional.empty());
 
-    var result = objectUnderTest.findById(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+    var result = objectUnderTest.findById(DEFAULT_COLLECTION_ID);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());  
@@ -86,10 +88,9 @@ class CollectionServiceTest {
 
   @Test
   void create_Saved_ReturnsCollection() {
-    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
     var name = "Shiny stuff";
 
-    when(mockIdProvider.generateId()).thenReturn(id);
+    when(mockIdProvider.generateId()).thenReturn(DEFAULT_COLLECTION_ID);
     when(mockRepository.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     var millisBefore = Instant.now().toEpochMilli();
@@ -100,7 +101,7 @@ class CollectionServiceTest {
     assertTrue(result.isPresent());
     
     var savedCollection = result.get();
-    assertEquals(id, savedCollection.getId());
+    assertEquals(DEFAULT_COLLECTION_ID, savedCollection.getId());
     assertEquals(name, savedCollection.getName());
 
     var createdAt = savedCollection.getCreatedAt();
@@ -122,7 +123,7 @@ class CollectionServiceTest {
 
   @Test
   void create_SaveReturnsNull_ReturnsEmpty() {
-    when(mockIdProvider.generateId()).thenReturn(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+    when(mockIdProvider.generateId()).thenReturn(DEFAULT_COLLECTION_ID);
     when(mockRepository.save(any(Collection.class))).thenReturn(null);
 
     var result = objectUnderTest.create(CollectionInput.builder().name("abc").build());
@@ -133,11 +134,9 @@ class CollectionServiceTest {
 
   @Test
   void update_Saved_ReturnsCollection() {
-    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
-    
     var originalInstant = Instant.parse("2010-10-10T11:11:11.295558200Z");
     var originalCollection = Collection.builder()
-      .id(id)
+      .id(DEFAULT_COLLECTION_ID)
       .createdAt(originalInstant)
       .lastModifiedAt(originalInstant)
       .name("Shiny stuff")
@@ -145,18 +144,18 @@ class CollectionServiceTest {
 
     var modifiedName = "New words";
 
-    when(mockRepository.findById(eq(id))).thenReturn(Optional.of(originalCollection));
+    when(mockRepository.findById(eq(DEFAULT_COLLECTION_ID))).thenReturn(Optional.of(originalCollection));
     when(mockRepository.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));    
 
     var millisBefore = Instant.now().toEpochMilli();
-    var result = objectUnderTest.update(CollectionInput.builder().name(modifiedName).build(), id);
+    var result = objectUnderTest.update(CollectionInput.builder().name(modifiedName).build(), DEFAULT_COLLECTION_ID);
     var millisAfter = Instant.now().toEpochMilli();
 
     assertNotNull(result);
     assertTrue(result.isPresent());
     
     var savedCollection = result.get();
-    assertEquals(id, savedCollection.getId());
+    assertEquals(DEFAULT_COLLECTION_ID, savedCollection.getId());
     assertEquals(modifiedName, savedCollection.getName());
 
     var createdAt = savedCollection.getCreatedAt();
@@ -173,9 +172,7 @@ class CollectionServiceTest {
   void update_NotFound_ReturnsEmpty() {
     when(mockRepository.findById(any())).thenReturn(Optional.empty());
 
-    var result = objectUnderTest.update(
-      CollectionInput.builder().name("New words").build(),
-      UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"));
+    var result = objectUnderTest.update(CollectionInput.builder().name("New words").build(), DEFAULT_COLLECTION_ID);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -184,7 +181,7 @@ class CollectionServiceTest {
   @Test
   void update_SaveReturnsNull_ReturnsEmpty() {
     when(mockRepository.findById(any())).thenReturn(Optional.of(Collection.builder()
-      .id(UUID.fromString("c725efeb-de77-46df-916a-2fc195376386"))
+      .id(DEFAULT_COLLECTION_ID)
       .name("Shiny stuff")
       .build()));    
     when(mockRepository.save(any(Collection.class))).thenReturn(null);
@@ -197,9 +194,8 @@ class CollectionServiceTest {
 
   @Test
   void delete_GivenIdIsUUID_MethodInvoked() {
-    var id = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
-    objectUnderTest.delete(id);
-    verify(mockRepository).deleteById(id);
+    objectUnderTest.delete(DEFAULT_COLLECTION_ID);
+    verify(mockRepository).deleteById(DEFAULT_COLLECTION_ID);
   }
 
   @Test
