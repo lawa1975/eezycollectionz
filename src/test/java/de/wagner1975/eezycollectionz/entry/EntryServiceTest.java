@@ -25,7 +25,7 @@ import de.wagner1975.eezycollectionz.collection.Collection;
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
 
 @ExtendWith(SpringExtension.class)
-public class EntryServiceTest {
+class EntryServiceTest {
 
   private static final UUID DEFAULT_COLLECTION_ID = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
   private static final UUID DEFAULT_ENTRY_ID = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
