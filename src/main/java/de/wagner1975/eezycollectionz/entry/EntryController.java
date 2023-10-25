@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -26,17 +27,20 @@ public class EntryController {
 
   private final EntryService service;
 
+  @Operation(summary = "Get all entries of a single collection")
   @GetMapping("")
   public List<Entry> findByCollectionId(@RequestParam UUID collectionId) {
     return service.findByCollectionId(collectionId);    
   }
 
+  @Operation(summary = "Get a single entry by its identifier")  
   @GetMapping("/{id}")
   public Entry findById(@PathVariable UUID id) {
     return service.findById(id).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entry not found"));
   }
 
+  @Operation(summary = "Add new entry to a collection")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/collection/{collectionId}")
   public Entry create(@Valid @RequestBody EntryInput entryInput, @PathVariable UUID collectionId) {
@@ -44,6 +48,7 @@ public class EntryController {
       () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to generate non-existing ID")); 
   }
 
+  @Operation(summary = "Modify an existing entry")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public Entry update(@Valid @RequestBody EntryInput entryInput, @PathVariable UUID id) {
@@ -51,6 +56,7 @@ public class EntryController {
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entry not found"));
   }
 
+  @Operation(summary = "Delete an existing entry")  
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void delete(@PathVariable UUID id) {

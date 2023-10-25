@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -25,17 +26,20 @@ public class CollectionController {
 
   private final CollectionService service;
   
+  @Operation(summary = "Get all collections")
   @GetMapping("")
   public List<Collection> findAll() {
     return service.findAll();    
   }
 
+  @Operation(summary = "Get a single collection by its identifier")
   @GetMapping("/{id}")
   public Collection findById(@PathVariable UUID id) {
     return service.findById(id).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
   }
 
+  @Operation(summary = "Add a new collection")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("")
   public Collection create(@Valid @RequestBody CollectionInput collectionInput) {
@@ -43,6 +47,7 @@ public class CollectionController {
       () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to generate non-existing ID")); 
   }
 
+  @Operation(summary = "Modify an existing collection")  
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public Collection update(@Valid @RequestBody CollectionInput collectionInput, @PathVariable UUID id) {
@@ -50,6 +55,7 @@ public class CollectionController {
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
   }
 
+  @Operation(summary = "Remove an existing collection")    
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void delete(@PathVariable UUID id) {
