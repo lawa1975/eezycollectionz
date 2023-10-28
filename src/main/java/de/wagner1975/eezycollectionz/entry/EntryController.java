@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,6 +26,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
+@Tag(
+  name = "Entries",
+  description = "Part of the API that provides retrieval and management operations on entries of any collection.")  
 @RestController
 @RequestMapping("/api/entries")
 @AllArgsConstructor
@@ -32,12 +36,16 @@ public class EntryController {
 
   private final EntryService service;
 
-  @Tag(
-    name = "entries",
-    description = "Entries API provides query and management operations on entries of any collection.")  
   @Operation(
     summary = "Get all entries of a single collection",
-    tags = { "entries" })
+    tags = { "Entries" })
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      content = {
+        @Content(
+          array = @ArraySchema(schema = @Schema(implementation = Entry.class)),
+          mediaType = "application/json") })})
   @GetMapping("")
   public List<Entry> findByCollectionId(@RequestParam UUID collectionId) {
     return service.findByCollectionId(collectionId);    
@@ -45,11 +53,18 @@ public class EntryController {
 
   @Operation(
     summary = "Get a single entry by its id",
-    tags = { "entries" })
+    tags = { "Entries" })
   @ApiResponses({
-    @ApiResponse(responseCode = "200", content = { @Content(schema = @Schema(implementation = Entry.class), mediaType = "application/json") }),
-    @ApiResponse(responseCode = "404", description = "An entry with the given id was not found.", content = { @Content(schema = @Schema()) })
-  })     
+    @ApiResponse(
+      responseCode = "200",
+      content = {
+        @Content(
+          schema = @Schema(implementation = Entry.class),
+          mediaType = "application/json") }),
+    @ApiResponse(
+      responseCode = "404",
+      description = "An entry with the given id was not found.",
+      content = { @Content(schema = @Schema()) })})
   @GetMapping("/{id}")
   public Entry findById(@PathVariable UUID id) {
     return service.findById(id).orElseThrow(
@@ -58,17 +73,27 @@ public class EntryController {
 
   @Operation(
     summary = "Add new entry to a collection",
-    tags = { "entries" })
+    tags = { "Entries" })
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "201",
+      description = "Returns successfully created entry",
+      content = { @Content(schema = @Schema(implementation = Entry.class),
+      mediaType = "application/json") }),
+    @ApiResponse(
+      responseCode = "422",
+      description = "Auto-generation of unique entry id failed.",
+      content = { @Content(schema = @Schema()) })})
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/collection/{collectionId}")
   public Entry create(@Valid @RequestBody EntryInput entryInput, @PathVariable UUID collectionId) {
     return service.create(entryInput, collectionId).orElseThrow(
-      () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to generate non-existing ID")); 
+      () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to auto-generate unique entry id")); 
   }
 
   @Operation(
     summary = "Modify an existing entry",
-    tags = { "entries" })
+    tags = { "Entries" })
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public Entry update(@Valid @RequestBody EntryInput entryInput, @PathVariable UUID id) {
@@ -78,7 +103,7 @@ public class EntryController {
 
   @Operation(
     summary = "Delete an existing entry",
-    tags = { "entries" })  
+    tags = { "Entries" })
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void delete(@PathVariable UUID id) {

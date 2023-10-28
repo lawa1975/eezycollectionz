@@ -24,6 +24,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
+@Tag(
+  name = "Collections",
+  description = "Part of the API that provides retrieval and management operations on collections.")
 @RestController
 @RequestMapping("/api/collections")
 @AllArgsConstructor
@@ -31,13 +34,10 @@ public class CollectionController {
 
   private final CollectionService service;
   
-  @Tag(
-    name = "collections",
-    description = "Collections API provides query and management operations on collections.")
   @Operation(
     summary = "Get all collections",
     description = "Returns all available collections.",
-    tags = { "collections" })
+    tags = { "Collections" })
   @GetMapping("")
   public List<Collection> findAll() {
     return service.findAll();    
@@ -46,7 +46,7 @@ public class CollectionController {
   @Operation(
     summary = "Get a collection by its id",
     description = "Finds a single collection by its identifier (UUID).",
-    tags = { "collections" })
+    tags = { "Collections" })
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = { @Content(schema = @Schema(implementation = Collection.class), mediaType = "application/json") }),
     @ApiResponse(responseCode = "404", description = "A collection with the given id was not found.", content = { @Content(schema = @Schema()) })
@@ -59,7 +59,7 @@ public class CollectionController {
 
   @Operation(
     summary = "Add a new collection",
-    tags = { "collections" })
+    tags = { "Collections" })
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("")
   public Collection create(@Valid @RequestBody CollectionInput collectionInput) {
@@ -69,7 +69,7 @@ public class CollectionController {
 
   @Operation(
     summary = "Modify an existing collection",
-    tags = { "collections" }) 
+    tags = { "Collections" }) 
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public Collection update(@Valid @RequestBody CollectionInput collectionInput, @PathVariable UUID id) {
@@ -79,7 +79,7 @@ public class CollectionController {
 
   @Operation(
     summary = "Remove an existing collection",
-    tags = { "collections" })
+    tags = { "Collections" })
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void delete(@PathVariable UUID id) {
