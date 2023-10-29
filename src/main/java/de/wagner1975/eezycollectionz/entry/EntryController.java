@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,7 +29,7 @@ import lombok.AllArgsConstructor;
 
 @Tag(
   name = "Entries",
-  description = "Part of the API that provides retrieval and management operations on entries of any collection.")  
+  description = "This part of the API provides retrieval and management operations on entries of any collection.")  
 @RestController
 @RequestMapping("/api/entries")
 @AllArgsConstructor
@@ -39,31 +40,40 @@ public class EntryController {
   @Operation(
     summary = "Get all entries of a single collection",
     tags = { "Entries" })
-  @ApiResponses({
-    @ApiResponse(
-      responseCode = "200",
-      content = {
-        @Content(
-          array = @ArraySchema(schema = @Schema(implementation = Entry.class)),
-          mediaType = "application/json") })})
+  @Parameter(
+    name = "collectionId",
+    description = "Identifies the collection, in which to find the entries",
+    required = true)
+  @ApiResponse(
+    responseCode = "200",
+    description ="Array containing all entries from the collection is returned (can be empty)",
+    content = {
+      @Content(
+        array = @ArraySchema(schema = @Schema(implementation = Entry.class)),
+        mediaType = "application/json")})
   @GetMapping("")
   public List<Entry> findByCollectionId(@RequestParam UUID collectionId) {
     return service.findByCollectionId(collectionId);    
   }
 
   @Operation(
-    summary = "Get a single entry by its id",
+    summary = "Get a single entry by its identifier",
     tags = { "Entries" })
+  @Parameter(
+    name = "id",
+    description = "Identifies the entry to find",
+    required = true)
   @ApiResponses({
     @ApiResponse(
       responseCode = "200",
+      description ="Found entry is returned",
       content = {
         @Content(
           schema = @Schema(implementation = Entry.class),
           mediaType = "application/json") }),
     @ApiResponse(
       responseCode = "404",
-      description = "An entry with the given id was not found.",
+      description = "No entry for given id was found",
       content = { @Content(schema = @Schema()) })})
   @GetMapping("/{id}")
   public Entry findById(@PathVariable UUID id) {
@@ -73,27 +83,57 @@ public class EntryController {
 
   @Operation(
     summary = "Add new entry to a collection",
-    tags = { "Entries" })
+    tags = { "Entries" },
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Entry data",
+      content = @Content(schema = @Schema(implementation = EntryInput.class),
+      mediaType = "application/json"),
+      required = true))
+  @Parameter(
+    name = "collectionId",
+    description = "Identifies the collection, to which the new entry will be added",
+    required = true)    
   @ApiResponses({
     @ApiResponse(
       responseCode = "201",
-      description = "Returns successfully created entry",
+      description = "Created entry is returned",
       content = { @Content(schema = @Schema(implementation = Entry.class),
       mediaType = "application/json") }),
     @ApiResponse(
       responseCode = "422",
-      description = "Auto-generation of unique entry id failed.",
+      description = "Auto-generation of unique entry id failed",
       content = { @Content(schema = @Schema()) })})
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/collection/{collectionId}")
   public Entry create(@Valid @RequestBody EntryInput entryInput, @PathVariable UUID collectionId) {
     return service.create(entryInput, collectionId).orElseThrow(
-      () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to auto-generate unique entry id")); 
+      () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Auto-generation of unique entry id failed")); 
   }
 
   @Operation(
-    summary = "Modify an existing entry",
-    tags = { "Entries" })
+    summary = "Update an existing entry",
+    tags = { "Entries" },
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Entry data",
+      content = @Content(schema = @Schema(implementation = EntryInput.class),
+      mediaType = "application/json"),
+      required = true))
+  @Parameter(
+    name = "id",
+    description = "Identifies the entry to be updated",
+    required = true)
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description ="Updated entry is returned",
+      content = {
+        @Content(
+          schema = @Schema(implementation = Entry.class),
+          mediaType = "application/json") }),
+    @ApiResponse(
+      responseCode = "404",
+      description = "No entry for given id was found",
+      content = { @Content(schema = @Schema()) })})
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public Entry update(@Valid @RequestBody EntryInput entryInput, @PathVariable UUID id) {
@@ -104,6 +144,13 @@ public class EntryController {
   @Operation(
     summary = "Delete an existing entry",
     tags = { "Entries" })
+  @Parameter(
+    name = "id",
+    description = "Identifies the entry to be deleted",
+    required = true)
+  @ApiResponse(
+    responseCode = "204",
+    description ="Entry is deleted")      
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void delete(@PathVariable UUID id) {
