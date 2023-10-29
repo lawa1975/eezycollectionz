@@ -26,7 +26,7 @@ import lombok.AllArgsConstructor;
 
 @Tag(
   name = "Collections",
-  description = "Part of the API that provides retrieval and management operations on collections.")
+  description = "This part of the API provides retrieval and management operations on collections")
 @RestController
 @RequestMapping("/api/collections")
 @AllArgsConstructor
@@ -36,7 +36,7 @@ public class CollectionController {
   
   @Operation(
     summary = "Get all collections",
-    description = "Returns all available collections.",
+    description = "Returns all available collections",
     tags = { "Collections" })
   @GetMapping("")
   public List<Collection> findAll() {
@@ -44,8 +44,8 @@ public class CollectionController {
   }
 
   @Operation(
-    summary = "Get a collection by its id",
-    description = "Finds a single collection by its identifier (UUID).",
+    summary = "Get a collection by its identifier",
+    description = "Finds a single collection by its identifier (UUID)",
     tags = { "Collections" })
   @ApiResponses({
     @ApiResponse(responseCode = "200", content = { @Content(schema = @Schema(implementation = Collection.class), mediaType = "application/json") }),
@@ -68,7 +68,7 @@ public class CollectionController {
   }
 
   @Operation(
-    summary = "Modify an existing collection",
+    summary = "Update an existing collection",
     tags = { "Collections" }) 
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
@@ -78,7 +78,7 @@ public class CollectionController {
   }
 
   @Operation(
-    summary = "Remove an existing collection",
+    summary = "Delete an existing collection",
     tags = { "Collections" })
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")

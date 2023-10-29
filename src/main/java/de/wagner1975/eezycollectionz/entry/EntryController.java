@@ -29,7 +29,7 @@ import lombok.AllArgsConstructor;
 
 @Tag(
   name = "Entries",
-  description = "This part of the API provides retrieval and management operations on entries of any collection.")  
+  description = "This part of the API provides retrieval and management operations on entries of any collection")  
 @RestController
 @RequestMapping("/api/entries")
 @AllArgsConstructor
@@ -38,7 +38,8 @@ public class EntryController {
   private final EntryService service;
 
   @Operation(
-    summary = "Get all entries of a single collection",
+    summary = "Get all entries of a collection",
+    description = "Finds all entries which are contained in a single collection",
     tags = { "Entries" })
   @Parameter(
     name = "collectionId",
@@ -57,7 +58,8 @@ public class EntryController {
   }
 
   @Operation(
-    summary = "Get a single entry by its identifier",
+    summary = "Get an entry by its identifier",
+    description = "Finds a single entry by its identifier (UUID)",    
     tags = { "Entries" })
   @Parameter(
     name = "id",
@@ -83,6 +85,7 @@ public class EntryController {
 
   @Operation(
     summary = "Add new entry to a collection",
+    description = "Creates a new entry and adds it to a single collection",
     tags = { "Entries" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Entry data",
@@ -112,6 +115,7 @@ public class EntryController {
 
   @Operation(
     summary = "Update an existing entry",
+    description = "Gets an entry by its identifier (UUID) and updates the data of it",    
     tags = { "Entries" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Entry data",
@@ -143,6 +147,7 @@ public class EntryController {
 
   @Operation(
     summary = "Delete an existing entry",
+    description = "Deletes an entry by its identifier (UUID)",    
     tags = { "Entries" })
   @Parameter(
     name = "id",
