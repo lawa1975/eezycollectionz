@@ -58,8 +58,8 @@ public class EntryController {
   }
 
   @Operation(
-    summary = "Get an entry by its identifier",
-    description = "Finds a single entry by its identifier (UUID)",    
+    summary = "Get a single entry",
+    description = "Finds an existing entry by its identifier (UUID)",    
     tags = { "Entries" })
   @Parameter(
     name = "id",
@@ -84,7 +84,7 @@ public class EntryController {
   }
 
   @Operation(
-    summary = "Add new entry to a collection",
+    summary = "Create an entry",
     description = "Creates a new entry and adds it to a single collection",
     tags = { "Entries" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -99,7 +99,7 @@ public class EntryController {
   @ApiResponses({
     @ApiResponse(
       responseCode = "201",
-      description = "Created entry is returned",
+      description = "New entry is returned",
       content = { @Content(schema = @Schema(implementation = Entry.class),
       mediaType = "application/json") }),
     @ApiResponse(
@@ -114,8 +114,8 @@ public class EntryController {
   }
 
   @Operation(
-    summary = "Update an existing entry",
-    description = "Gets an entry by its identifier (UUID) and updates the data of it",    
+    summary = "Update an entry",
+    description = "Gets an existing entry by its identifier (UUID) and updates the data",    
     tags = { "Entries" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Entry data",
@@ -146,8 +146,8 @@ public class EntryController {
   }
 
   @Operation(
-    summary = "Delete an existing entry",
-    description = "Deletes an entry by its identifier (UUID)",    
+    summary = "Delete an entry",
+    description = "Deletes an existing entry by its identifier (UUID)",    
     tags = { "Entries" })
   @Parameter(
     name = "id",
