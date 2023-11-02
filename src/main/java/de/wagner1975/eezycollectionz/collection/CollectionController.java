@@ -43,8 +43,7 @@ public class CollectionController {
   
   @Operation(
     summary = "Get all collections",
-    description = "Finds all existing collections",
-    tags = { "Collections" })
+    description = "Finds all existing collections")
   @ApiResponse(
     responseCode = "200",
     description ="Array containing all collections (can be empty)",
@@ -73,8 +72,7 @@ public class CollectionController {
 
   @Operation(
     summary = "Get a single collection",
-    description = "Finds an existing collection by its identifier (UUID)",
-    tags = { "Collections" })
+    description = "Finds an existing collection by its identifier (UUID)")
   @Parameter(
     name = "id",
     description = "Identifies the collection to find",
@@ -83,15 +81,12 @@ public class CollectionController {
     @ApiResponse(
       responseCode = "200",
       description = "Found collection is returned",
-      content = {
-        @Content(
-          schema = @Schema(implementation = Collection.class),
-          mediaType = "application/json")}),
+      useReturnTypeSchema = true),
     @ApiResponse(
       responseCode = "404",
       description = "No collection with the given id was found.",
       content = { @Content(schema = @Schema()) })})  
-  @GetMapping("/{id}")
+  @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   public Collection findById(@PathVariable UUID id) {
     return service.findById(id).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
@@ -100,24 +95,23 @@ public class CollectionController {
   @Operation(
     summary = "Create a collection",
     description = "Creates a new collection and stores it in repository",    
-    tags = { "Collections" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Collection data",
-      content = @Content(schema = @Schema(implementation = CollectionInput.class),
-      mediaType = "application/json"),
+      content = @Content(
+        schema = @Schema(implementation = CollectionInput.class),
+        mediaType = MediaType.APPLICATION_JSON_VALUE),
       required = true))
   @ApiResponses({
     @ApiResponse(
       responseCode = "201",
       description = "New collection is returned",
-      content = { @Content(schema = @Schema(implementation = Collection.class),
-      mediaType = "application/json") }),
+      useReturnTypeSchema = true),
     @ApiResponse(
       responseCode = "422",
       description = "Auto-generation of unique collection id failed",
       content = { @Content(schema = @Schema()) })})
   @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("")
+  @PostMapping(path = "", produces = MediaType.APPLICATION_JSON_VALUE)
   public Collection create(@Valid @RequestBody CollectionInput collectionInput) {
     return service.create(collectionInput).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Auto-generation of unique collection id failed")); 
@@ -126,11 +120,10 @@ public class CollectionController {
   @Operation(
     summary = "Update a collection",
     description = "Gets an existing collection by its identifier (UUID) and updates the data",    
-    tags = { "Collections" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Collection data",
       content = @Content(schema = @Schema(implementation = CollectionInput.class),
-      mediaType = "application/json"),
+      mediaType = MediaType.APPLICATION_JSON_VALUE),
       required = true))
   @Parameter(
     name = "id",
@@ -140,16 +133,13 @@ public class CollectionController {
     @ApiResponse(
       responseCode = "200",
       description ="Updated collection is returned",
-      content = {
-        @Content(
-          schema = @Schema(implementation = Collection.class),
-          mediaType = "application/json") }),
+      useReturnTypeSchema = true),
     @ApiResponse(
       responseCode = "404",
       description = "No collection for given id was found",
       content = { @Content(schema = @Schema()) })})    
   @ResponseStatus(HttpStatus.OK)
-  @PutMapping("/{id}")
+  @PutMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   public Collection update(@Valid @RequestBody CollectionInput collectionInput, @PathVariable UUID id) {
     return service.update(collectionInput, id).orElseThrow(
       () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
@@ -157,8 +147,7 @@ public class CollectionController {
 
   @Operation(
     summary = "Delete a collection",
-    description = "Deletes an existing collection by its identifier (UUID)",
-    tags = { "Collections" })
+    description = "Deletes an existing collection by its identifier (UUID)")
   @Parameter(
     name = "id",
     description = "Identifies the collection to be deleted",
