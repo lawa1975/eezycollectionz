@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +20,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
@@ -38,22 +43,30 @@ class CollectionServiceTest {
   private CollectionService objectUnderTest;
 
   @Test
-  void findAll_Success_ReturnsList() {
+  void findAll_Success_ReturnsPage() {
     var id1 = UUID.fromString("00000001-1111-0000-0000-000000000001");
     var id2 = UUID.fromString("00000002-2222-0000-0000-000000000002");
 
-    when(mockRepository.findAll())
+    var pageable = PageRequest.of(1, 2, Sort.by(Direction.ASC, "id"));
+
+    @SuppressWarnings("unchecked")
+    Page<Collection> mockPage = mock(Page.class);  
+    when(mockPage.getContent())
       .thenReturn(List.of(
         Collection.builder().id(id1).build(),
         Collection.builder().id(id2).build()));
-      
-    var result = objectUnderTest.findAll();
+
+    when(mockRepository.findAll(pageable)).thenReturn(mockPage);
+ 
+    var result = objectUnderTest.findAll(pageable);
 
     assertNotNull(result);
-    assertEquals(result.size(), 2);
-    assertEquals(result.get(0).getId(), id1);
-    assertEquals(result.get(1).getId(), id2);
-  }
+    var content = result.getContent();
+    assertNotNull(content);
+    assertEquals(content.size(), 2);
+    assertEquals(content.get(0).getId(), id1);
+    assertEquals(content.get(1).getId(), id2);
+  }  
 
   @Test
   void findById_IsFound_ReturnsCollection() {

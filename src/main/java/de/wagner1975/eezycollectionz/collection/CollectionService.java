@@ -1,7 +1,6 @@
 package de.wagner1975.eezycollectionz.collection;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,10 +20,6 @@ class CollectionService {
   private final CollectionRepository repository;
 
   private final CollectionIdProvider provider;
-
-  List<Collection> findAll() {
-    return repository.findAll();
-  }
 
   Page<Collection> findAll(Pageable pageable) {
     return repository.findAll(pageable);

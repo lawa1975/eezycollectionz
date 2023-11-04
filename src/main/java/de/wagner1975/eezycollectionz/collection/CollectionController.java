@@ -5,7 +5,9 @@ import java.util.UUID;
 
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -53,7 +55,7 @@ public class CollectionController {
         mediaType = "application/json")})    
   @GetMapping("")
   public List<Collection> findAll() {
-    return service.findAll();    
+    return service.findAll(PageRequest.of(0, 100, Sort.by(Direction.ASC, "id"))).getContent();    
   }
 
   @Operation(
