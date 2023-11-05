@@ -1,23 +1,28 @@
 package de.wagner1975.eezycollectionz.collection;
 
 import java.time.Instant;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -48,24 +53,43 @@ class CollectionControllerTest {
   private ObjectMapper objectMapper;
 
   @MockBean
-  private CollectionService mockService;
+  private CollectionService serviceMock;
+
+  @MockBean
+  private PageImpl<Collection> pageMock;
+
+  @Captor
+  private ArgumentCaptor<Pageable> pageableCaptor;
 
   @Test
   void get_Success_Ok() throws Exception {
-    @SuppressWarnings("unchecked")
-    Page<Collection> mockPage = mock(Page.class);
-    when(mockPage.getContent()).thenReturn(Collections.emptyList());
+    var id1 = "00000001-1111-0000-0000-000000000001";
+    var id2 = "00000002-2222-0000-0000-000000000002";
 
-    when(mockService.findAll(any(Pageable.class))).thenReturn(mockPage);
+    when(pageMock.getContent())
+    .thenReturn(List.of(
+        Collection.builder().id(UUID.fromString(id1)).build(),
+        Collection.builder().id(UUID.fromString(id2)).build()));   
+
+    when(serviceMock.findAll(pageableCaptor.capture())).thenReturn(pageMock);
 
     mockMvc
-      .perform(get(REQUEST_PATH))
-      .andExpect(MockMvcResultMatchers.status().isOk());
+      .perform(get(REQUEST_PATH + "/paginated?page=5&size=2"))
+      .andExpect(MockMvcResultMatchers.status().isOk())
+      .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].id").value(id1))
+      .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].id").value(id2));
+      
+	  var allValues = pageableCaptor.getAllValues();
+    assertEquals(1, allValues.size());
+    var capturedPageable = allValues.get(0);
+    assertNotNull(capturedPageable);
+    assertEquals(5, capturedPageable.getPageNumber());
+    assertEquals(2, capturedPageable.getPageSize());
   }
 
   @Test
   void getById_Success_Ok() throws Exception {
-    when(mockService.findById(eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
+    when(serviceMock.findById(eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
       .thenReturn(Optional.of(Collection.builder()
         .id(UUID.fromString(DEFAULT_COLLECTION_ID))
         .createdAt(Instant.parse(CREATED_AT))
@@ -91,7 +115,7 @@ class CollectionControllerTest {
 
   @Test
   void getById_NoCollectionReturned_NotFound() throws Exception {
-    when(mockService.findById(any())).thenReturn(Optional.empty());
+    when(serviceMock.findById(any())).thenReturn(Optional.empty());
 
     mockMvc
       .perform(get(REQUEST_PATH + "/" + DEFAULT_COLLECTION_ID))
@@ -102,7 +126,7 @@ class CollectionControllerTest {
   void post_Success_Created() throws Exception {
     var collectionInput = CollectionInput.builder().name(DEFAULT_NAME).build(); 
     
-    when(mockService.create(any()))
+    when(serviceMock.create(any()))
       .thenReturn(Optional.of(Collection.builder()
         .id(UUID.fromString(DEFAULT_COLLECTION_ID))
         .createdAt(Instant.parse(CREATED_AT))
@@ -123,7 +147,7 @@ class CollectionControllerTest {
 
   @Test
   void post_FailureOnIdGeneration_UnprocessableEntity() throws Exception {
-    when(mockService.create(any())).thenReturn(Optional.empty());
+    when(serviceMock.create(any())).thenReturn(Optional.empty());
 
     mockMvc
       .perform(post(REQUEST_PATH)
@@ -145,7 +169,7 @@ class CollectionControllerTest {
   void put_Success_Ok() throws Exception {
     var collectionInput = CollectionInput.builder().name(MODIFIED_NAME).build();
 
-    when(mockService.update(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
+    when(serviceMock.update(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
       .thenReturn(Optional.of(Collection.builder()
         .id(UUID.fromString(DEFAULT_COLLECTION_ID))
         .createdAt(Instant.parse(CREATED_AT))
@@ -184,7 +208,7 @@ class CollectionControllerTest {
 
   @Test
   void put_FailureOnUpdate_NotFound() throws Exception {
-    when(mockService.update(any(), any())).thenReturn(Optional.empty());
+    when(serviceMock.update(any(), any())).thenReturn(Optional.empty());
 
     mockMvc
       .perform(put(REQUEST_PATH + "/" + DEFAULT_COLLECTION_ID)
