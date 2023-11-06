@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.wagner1975.eezycollectionz.collection.Collection;
@@ -36,6 +38,9 @@ class EntryServiceTest {
   @Mock
   private EntryIdProvider idProviderMock;
 
+  @Mock
+  private PageImpl<Entry> pageMock;
+
   @InjectMocks
   private EntryService objectUnderTest;
   
@@ -44,10 +49,13 @@ class EntryServiceTest {
     var id1 = UUID.fromString("00000001-1111-0000-0000-000000000001");
     var id2 = UUID.fromString("00000002-2222-0000-0000-000000000002");
 
-    when(repositoryMock.findByCollectionId(eq(DEFAULT_COLLECTION_ID)))
+    when(pageMock.getContent())
       .thenReturn(List.of(
         Entry.builder().id(id1).build(),
         Entry.builder().id(id2).build()));
+
+    when(repositoryMock.findByCollectionId(eq(DEFAULT_COLLECTION_ID), any(Pageable.class)))
+      .thenReturn(pageMock);
 
     var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID);
 
@@ -59,7 +67,11 @@ class EntryServiceTest {
 
   @Test
   void findByCollectionId_NotFound_ReturnsEmpty() {
-    when(repositoryMock.findByCollectionId(any())).thenReturn(List.of());
+    when(pageMock.getContent())
+      .thenReturn(List.of());
+
+    when(repositoryMock.findByCollectionId(any(UUID.class), any(Pageable.class)))
+      .thenReturn(pageMock);
 
     var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID);
 

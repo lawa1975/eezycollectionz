@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
@@ -25,7 +26,7 @@ class EntryService {
 
   List<Entry> findByCollectionId(UUID collectionId) {
     Preconditions.checkArgument(Objects.nonNull(collectionId), "collectionId is null");   
-    return repository.findByCollectionId(collectionId);   
+    return repository.findByCollectionId(collectionId, PageRequest.of(0, 100)).getContent();   
   }
 
   Optional<Entry> findById(UUID id) {

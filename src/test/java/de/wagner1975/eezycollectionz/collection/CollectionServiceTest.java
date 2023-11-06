@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -39,6 +38,9 @@ class CollectionServiceTest {
   @Mock
   private CollectionIdProvider idProviderMock;
 
+  @Mock
+  private PageImpl<Collection> pageMock;  
+
   @InjectMocks
   private CollectionService objectUnderTest;
 
@@ -49,14 +51,12 @@ class CollectionServiceTest {
 
     var pageable = PageRequest.of(1, 2, Sort.by(Direction.ASC, "id"));
 
-    @SuppressWarnings("unchecked")
-    Page<Collection> mockPage = mock(Page.class);  
-    when(mockPage.getContent())
+    when(pageMock.getContent())
       .thenReturn(List.of(
         Collection.builder().id(id1).build(),
         Collection.builder().id(id2).build()));
 
-    when(repositoryMock.findAll(pageable)).thenReturn(mockPage);
+    when(repositoryMock.findAll(pageable)).thenReturn(pageMock);
  
     var result = objectUnderTest.findAll(pageable);
 
