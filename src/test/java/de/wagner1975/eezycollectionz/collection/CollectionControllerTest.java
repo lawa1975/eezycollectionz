@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -68,16 +69,16 @@ class CollectionControllerTest {
 
     when(pageMock.getContent())
     .thenReturn(List.of(
-        Collection.builder().id(UUID.fromString(id1)).build(),
-        Collection.builder().id(UUID.fromString(id2)).build()));   
+        Collection.builder().id(UUID.fromString(id2)).build(),
+        Collection.builder().id(UUID.fromString(id1)).build()));   
 
     when(serviceMock.findAll(pageableCaptor.capture())).thenReturn(pageMock);
 
     mockMvc
-      .perform(get(REQUEST_PATH + "/paginated?page=5&size=2"))
+      .perform(get(REQUEST_PATH + "?page=5&size=2&sort=id,desc"))
       .andExpect(MockMvcResultMatchers.status().isOk())
-      .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].id").value(id1))
-      .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].id").value(id2));
+      .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].id").value(id2))
+      .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].id").value(id1));
       
 	  var allValues = pageableCaptor.getAllValues();
     assertEquals(1, allValues.size());
@@ -85,6 +86,11 @@ class CollectionControllerTest {
     assertNotNull(capturedPageable);
     assertEquals(5, capturedPageable.getPageNumber());
     assertEquals(2, capturedPageable.getPageSize());
+    var sort = capturedPageable.getSort();
+    assertNotNull(sort);
+    var order = sort.toList().get(0);
+    assertEquals("id", order.getProperty());
+    assertTrue(order.isDescending());
   }
 
   @Test

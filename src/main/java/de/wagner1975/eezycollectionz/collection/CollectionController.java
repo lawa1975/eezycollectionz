@@ -1,13 +1,10 @@
 package de.wagner1975.eezycollectionz.collection;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -24,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -44,30 +40,15 @@ public class CollectionController {
   private final CollectionService service;
   
   @Operation(
-    summary = "Get all collections",
-    description = "Finds all existing collections")
-  @ApiResponse(
-    responseCode = "200",
-    description ="Array containing all collections (can be empty)",
-    content = {
-      @Content(
-        array = @ArraySchema(schema = @Schema(implementation = Collection.class)),
-        mediaType = "application/json")})    
-  @GetMapping("")
-  public List<Collection> findAll() {
-    return service.findAll(PageRequest.of(0, 100, Sort.by(Direction.ASC, "id"))).getContent();    
-  }
-
-  @Operation(
     summary = "Get collections using pagination")
   @ApiResponse(
     responseCode = "200",
     description ="Page with collections and additional information",
     useReturnTypeSchema = true)
-  @GetMapping(path = "paginated", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(path = "", produces = MediaType.APPLICATION_JSON_VALUE)
   public Page<Collection> findAll(
     @ParameterObject
-    @PageableDefault(page = 0, size = 3, sort = "createdAt", direction = Direction.ASC)
+    @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Direction.ASC)
     Pageable pageable) {
     return service.findAll(pageable);
   }
