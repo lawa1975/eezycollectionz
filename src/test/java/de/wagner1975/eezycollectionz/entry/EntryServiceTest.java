@@ -31,10 +31,10 @@ class EntryServiceTest {
   private static final UUID DEFAULT_ENTRY_ID = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
 
   @Mock
-  private EntryRepository mockRepository;
+  private EntryRepository repositoryMock;
   
   @Mock
-  private EntryIdProvider mockIdProvider;
+  private EntryIdProvider idProviderMock;
 
   @InjectMocks
   private EntryService objectUnderTest;
@@ -44,7 +44,7 @@ class EntryServiceTest {
     var id1 = UUID.fromString("00000001-1111-0000-0000-000000000001");
     var id2 = UUID.fromString("00000002-2222-0000-0000-000000000002");
 
-    when(mockRepository.findByCollectionId(eq(DEFAULT_COLLECTION_ID)))
+    when(repositoryMock.findByCollectionId(eq(DEFAULT_COLLECTION_ID)))
       .thenReturn(List.of(
         Entry.builder().id(id1).build(),
         Entry.builder().id(id2).build()));
@@ -59,7 +59,7 @@ class EntryServiceTest {
 
   @Test
   void findByCollectionId_NotFound_ReturnsEmpty() {
-    when(mockRepository.findByCollectionId(any())).thenReturn(List.of());
+    when(repositoryMock.findByCollectionId(any())).thenReturn(List.of());
 
     var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID);
 
@@ -79,7 +79,7 @@ class EntryServiceTest {
   void findById_IsFound_ReturnsCollection() {
     var id = DEFAULT_ENTRY_ID;
 
-    when(mockRepository.findById(eq(id))).thenReturn(Optional.of(Entry.builder().id(id).build()));
+    when(repositoryMock.findById(eq(id))).thenReturn(Optional.of(Entry.builder().id(id).build()));
 
     var result = objectUnderTest.findById(id);
 
@@ -90,7 +90,7 @@ class EntryServiceTest {
 
   @Test
   void findById_NotFound_ReturnsEmpty() {
-    when(mockRepository.findById(any())).thenReturn(Optional.empty());
+    when(repositoryMock.findById(any())).thenReturn(Optional.empty());
 
     var result = objectUnderTest.findById(DEFAULT_ENTRY_ID);
 
@@ -110,8 +110,8 @@ class EntryServiceTest {
   void create_Saved_ReturnsEntry() {
     var name = "Shiny stuff";
 
-    when(mockIdProvider.generateId()).thenReturn(DEFAULT_ENTRY_ID);
-    when(mockRepository.save(any(Entry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(idProviderMock.generateId()).thenReturn(DEFAULT_ENTRY_ID);
+    when(repositoryMock.save(any(Entry.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     var millisBefore = Instant.now().toEpochMilli();
     var result = objectUnderTest.create(EntryInput.builder().name(name).build(), DEFAULT_COLLECTION_ID);
@@ -137,7 +137,7 @@ class EntryServiceTest {
 
   @Test
   void create_GenerateIdThrowsException_ReturnsEmpty() {
-    when(mockIdProvider.generateId()).thenThrow(new GenerateIdException());
+    when(idProviderMock.generateId()).thenThrow(new GenerateIdException());
 
     var result = objectUnderTest.create(
       EntryInput.builder().name("xyz").build(),
@@ -149,8 +149,8 @@ class EntryServiceTest {
 
   @Test
   void create_SaveReturnsNull_ReturnsEmpty() {
-    when(mockIdProvider.generateId()).thenReturn(DEFAULT_ENTRY_ID);
-    when(mockRepository.save(any(Entry.class))).thenReturn(null);
+    when(idProviderMock.generateId()).thenReturn(DEFAULT_ENTRY_ID);
+    when(repositoryMock.save(any(Entry.class))).thenReturn(null);
 
     var result = objectUnderTest.create(
       EntryInput.builder().name("xyz").build(),
@@ -189,8 +189,8 @@ class EntryServiceTest {
       
     var modifiedName = "New words";
 
-    when(mockRepository.findById(eq(DEFAULT_ENTRY_ID))).thenReturn(Optional.of(originalEntry));
-    when(mockRepository.save(any(Entry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(repositoryMock.findById(eq(DEFAULT_ENTRY_ID))).thenReturn(Optional.of(originalEntry));
+    when(repositoryMock.save(any(Entry.class))).thenAnswer(invocation -> invocation.getArgument(0));
     
     var millisBefore = Instant.now().toEpochMilli();
     var result = objectUnderTest.update(EntryInput.builder().name(modifiedName).build(), DEFAULT_ENTRY_ID);
@@ -219,7 +219,7 @@ class EntryServiceTest {
 
   @Test
   void update_NotFound_ReturnsEmpty() {
-    when(mockRepository.findById(any())).thenReturn(Optional.empty());
+    when(repositoryMock.findById(any())).thenReturn(Optional.empty());
 
     var result = objectUnderTest.update(EntryInput.builder().name("New words").build(), DEFAULT_ENTRY_ID);
 
@@ -229,8 +229,8 @@ class EntryServiceTest {
 
   @Test
   void update_SaveReturnsNull_ReturnsEmpty() {
-    when(mockRepository.findById(eq(DEFAULT_ENTRY_ID))).thenReturn(Optional.of(Entry.builder().id(DEFAULT_ENTRY_ID).build()));    
-    when(mockRepository.save(any(Entry.class))).thenReturn(null);
+    when(repositoryMock.findById(eq(DEFAULT_ENTRY_ID))).thenReturn(Optional.of(Entry.builder().id(DEFAULT_ENTRY_ID).build()));    
+    when(repositoryMock.save(any(Entry.class))).thenReturn(null);
 
     var result = objectUnderTest.update(EntryInput.builder().name("New words").build(), DEFAULT_ENTRY_ID);
 
@@ -257,7 +257,7 @@ class EntryServiceTest {
   @Test
   void delete_GivenIdIsUUID_MethodInvoked() {
     objectUnderTest.delete(DEFAULT_ENTRY_ID);
-    verify(mockRepository).deleteById(DEFAULT_ENTRY_ID);
+    verify(repositoryMock).deleteById(DEFAULT_ENTRY_ID);
   }
 
   @Test

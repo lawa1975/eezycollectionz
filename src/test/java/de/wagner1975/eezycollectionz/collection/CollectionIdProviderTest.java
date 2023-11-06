@@ -20,10 +20,10 @@ import de.wagner1975.eezycollectionz.support.GenerateIdOperationFactory;
 class CollectionIdProviderTest {
 
   @Mock
-  private GenerateIdOperationFactory mockFactory;
+  private GenerateIdOperationFactory factoryMock;
 
   @Mock
-  private GenerateIdForRepositoryOperation<UUID> mockOperation;
+  private GenerateIdForRepositoryOperation<UUID> operationMock;
 
   @InjectMocks
   private CollectionIdProvider objectUnderTest;
@@ -32,8 +32,8 @@ class CollectionIdProviderTest {
   void generateId_Success_ReturnsUUID() {
     var id = UUID.fromString("00000003-3333-0000-0000-000000000003");
 
-    when(mockFactory.createForUUIDInRepository(any(), any())).thenReturn(mockOperation);
-    when(mockOperation.execute()).thenReturn(id);
+    when(factoryMock.createForUUIDInRepository(any(), any())).thenReturn(operationMock);
+    when(operationMock.execute()).thenReturn(id);
 
     var result = objectUnderTest.generateId();
 

@@ -49,11 +49,11 @@ class EntryControllerTest {
   private ObjectMapper objectMapper;
 
   @MockBean
-  private EntryService mockService;
+  private EntryService serviceMock;
 
   @Test
   void getByCollectionId_Success_Ok() throws Exception {
-      when(mockService.findByCollectionId(eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
+      when(serviceMock.findByCollectionId(eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
         .thenReturn(Collections.emptyList());
 
       mockMvc
@@ -70,7 +70,7 @@ class EntryControllerTest {
 
   @Test
   void getById_Success_Ok() throws Exception {
-      when(mockService.findById(eq(UUID.fromString(DEFAULT_ENTRY_ID))))
+      when(serviceMock.findById(eq(UUID.fromString(DEFAULT_ENTRY_ID))))
         .thenReturn(Optional.of(Entry.builder()
           .id(UUID.fromString(DEFAULT_ENTRY_ID))
           .createdAt(Instant.parse(CREATED_AT))
@@ -96,7 +96,7 @@ class EntryControllerTest {
 
   @Test
   void getById_NoEntryReturned_NotFound() throws Exception {
-      when(mockService.findById(any())).thenReturn(Optional.empty());
+      when(serviceMock.findById(any())).thenReturn(Optional.empty());
 
       mockMvc
         .perform(get(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID))
@@ -107,7 +107,7 @@ class EntryControllerTest {
   void post_Success_Created() throws Exception {
       var entryInput = EntryInput.builder().name(DEFAULT_NAME).build(); 
     
-      when(mockService.create(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
+      when(serviceMock.create(any(), eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
         .thenReturn(Optional.of(Entry.builder()
           .id(UUID.fromString(DEFAULT_ENTRY_ID))
           .createdAt(Instant.parse(CREATED_AT))
@@ -128,7 +128,7 @@ class EntryControllerTest {
 
   @Test
   void post_FailureOnIdGeneration_UnprocessableEntity() throws Exception {
-      when(mockService.create(any(), any())).thenReturn(Optional.empty());
+      when(serviceMock.create(any(), any())).thenReturn(Optional.empty());
 
       mockMvc
         .perform(post(REQUEST_WITH_COLLECTION_PATH + "/" + DEFAULT_COLLECTION_ID)
@@ -159,7 +159,7 @@ class EntryControllerTest {
   void put_Success_Ok() throws Exception {
       var entryInput = EntryInput.builder().name(MODIFIED_NAME).build();
 
-      when(mockService.update(any(), eq(UUID.fromString(DEFAULT_ENTRY_ID))))
+      when(serviceMock.update(any(), eq(UUID.fromString(DEFAULT_ENTRY_ID))))
         .thenReturn(Optional.of(Entry.builder()
           .id(UUID.fromString(DEFAULT_ENTRY_ID))
           .createdAt(Instant.parse(CREATED_AT))
@@ -198,7 +198,7 @@ class EntryControllerTest {
 
   @Test
   void put_FailureOnUpdate_NotFound() throws Exception {
-      when(mockService.update(any(), any())).thenReturn(Optional.empty());
+      when(serviceMock.update(any(), any())).thenReturn(Optional.empty());
 
       mockMvc
         .perform(put(REQUEST_PATH + "/" + DEFAULT_ENTRY_ID)

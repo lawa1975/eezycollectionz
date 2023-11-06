@@ -34,10 +34,10 @@ class CollectionServiceTest {
   private static final UUID DEFAULT_ID = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
 
   @Mock
-  private CollectionRepository mockRepository;
+  private CollectionRepository repositoryMock;
   
   @Mock
-  private CollectionIdProvider mockIdProvider;
+  private CollectionIdProvider idProviderMock;
 
   @InjectMocks
   private CollectionService objectUnderTest;
@@ -56,7 +56,7 @@ class CollectionServiceTest {
         Collection.builder().id(id1).build(),
         Collection.builder().id(id2).build()));
 
-    when(mockRepository.findAll(pageable)).thenReturn(mockPage);
+    when(repositoryMock.findAll(pageable)).thenReturn(mockPage);
  
     var result = objectUnderTest.findAll(pageable);
 
@@ -72,7 +72,7 @@ class CollectionServiceTest {
   void findById_IsFound_ReturnsCollection() {
     var id = DEFAULT_ID;
 
-    when(mockRepository.findById(eq(id))).thenReturn(Optional.of(Collection.builder().id(id).build()));
+    when(repositoryMock.findById(eq(id))).thenReturn(Optional.of(Collection.builder().id(id).build()));
 
     var result = objectUnderTest.findById(id);
 
@@ -83,7 +83,7 @@ class CollectionServiceTest {
 
   @Test
   void findById_NotFound_ReturnsEmpty() {
-    when(mockRepository.findById(any())).thenReturn(Optional.empty());
+    when(repositoryMock.findById(any())).thenReturn(Optional.empty());
 
     var result = objectUnderTest.findById(DEFAULT_ID);
 
@@ -103,8 +103,8 @@ class CollectionServiceTest {
   void create_Saved_ReturnsCollection() {
     var name = "Shiny stuff";
 
-    when(mockIdProvider.generateId()).thenReturn(DEFAULT_ID);
-    when(mockRepository.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(idProviderMock.generateId()).thenReturn(DEFAULT_ID);
+    when(repositoryMock.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     var millisBefore = Instant.now().toEpochMilli();
     var result = objectUnderTest.create(CollectionInput.builder().name(name).build());
@@ -126,7 +126,7 @@ class CollectionServiceTest {
 
   @Test
   void create_GenerateIdThrowsException_ReturnsEmpty() {
-    when(mockIdProvider.generateId()).thenThrow(new GenerateIdException());
+    when(idProviderMock.generateId()).thenThrow(new GenerateIdException());
 
     var result = objectUnderTest.create(CollectionInput.builder().name("abc").build());
 
@@ -136,8 +136,8 @@ class CollectionServiceTest {
 
   @Test
   void create_SaveReturnsNull_ReturnsEmpty() {
-    when(mockIdProvider.generateId()).thenReturn(DEFAULT_ID);
-    when(mockRepository.save(any(Collection.class))).thenReturn(null);
+    when(idProviderMock.generateId()).thenReturn(DEFAULT_ID);
+    when(repositoryMock.save(any(Collection.class))).thenReturn(null);
 
     var result = objectUnderTest.create(CollectionInput.builder().name("abc").build());
 
@@ -165,8 +165,8 @@ class CollectionServiceTest {
 
     var modifiedName = "New words";
 
-    when(mockRepository.findById(eq(DEFAULT_ID))).thenReturn(Optional.of(originalCollection));
-    when(mockRepository.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));    
+    when(repositoryMock.findById(eq(DEFAULT_ID))).thenReturn(Optional.of(originalCollection));
+    when(repositoryMock.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));    
 
     var millisBefore = Instant.now().toEpochMilli();
     var result = objectUnderTest.update(CollectionInput.builder().name(modifiedName).build(), DEFAULT_ID);
@@ -191,7 +191,7 @@ class CollectionServiceTest {
 
   @Test
   void update_NotFound_ReturnsEmpty() {
-    when(mockRepository.findById(any())).thenReturn(Optional.empty());
+    when(repositoryMock.findById(any())).thenReturn(Optional.empty());
 
     var result = objectUnderTest.update(CollectionInput.builder().name("New words").build(), DEFAULT_ID);
 
@@ -201,8 +201,8 @@ class CollectionServiceTest {
 
   @Test
   void update_SaveReturnsNull_ReturnsEmpty() {
-    when(mockRepository.findById(any())).thenReturn(Optional.of(Collection.builder().id(DEFAULT_ID).build()));    
-    when(mockRepository.save(any(Collection.class))).thenReturn(null);
+    when(repositoryMock.findById(any())).thenReturn(Optional.of(Collection.builder().id(DEFAULT_ID).build()));    
+    when(repositoryMock.save(any(Collection.class))).thenReturn(null);
 
     var result = objectUnderTest.update(CollectionInput.builder().name("New words").build(), DEFAULT_ID);
 
@@ -229,7 +229,7 @@ class CollectionServiceTest {
   @Test
   void delete_GivenIdIsUUID_MethodInvoked() {
     objectUnderTest.delete(DEFAULT_ID);
-    verify(mockRepository).deleteById(DEFAULT_ID);
+    verify(repositoryMock).deleteById(DEFAULT_ID);
   }
 
   @Test
