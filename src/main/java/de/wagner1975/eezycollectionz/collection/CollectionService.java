@@ -22,6 +22,7 @@ class CollectionService {
   private final CollectionIdProvider provider;
 
   Page<Collection> findAll(Pageable pageable) {
+    Preconditions.checkArgument(Objects.nonNull(pageable), "pageable is null");
     return repository.findAll(pageable);
   }
 

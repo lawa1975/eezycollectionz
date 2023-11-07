@@ -45,7 +45,7 @@ class CollectionServiceTest {
   private CollectionService objectUnderTest;
 
   @Test
-  void findAll_Success_ReturnsPage() {
+  void findAll_Success_ReturnsPageWithCollections() {
     var id1 = UUID.fromString("00000001-1111-0000-0000-000000000001");
     var id2 = UUID.fromString("00000002-2222-0000-0000-000000000002");
 
@@ -67,6 +67,14 @@ class CollectionServiceTest {
     assertEquals(content.get(0).getId(), id1);
     assertEquals(content.get(1).getId(), id2);
   }  
+
+  @Test
+  void findAll_GivenPageableIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.findAll(null);
+    });
+    assertEquals("pageable is null", exception.getMessage());     
+  }
 
   @Test
   void findById_IsFound_ReturnsCollection() {
