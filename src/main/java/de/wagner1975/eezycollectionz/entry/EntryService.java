@@ -1,12 +1,12 @@
 package de.wagner1975.eezycollectionz.entry;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
@@ -24,9 +24,10 @@ class EntryService {
 
   private final EntryIdProvider provider;
 
-  List<Entry> findByCollectionId(UUID collectionId) {
-    Preconditions.checkArgument(Objects.nonNull(collectionId), "collectionId is null");   
-    return repository.findByCollectionId(collectionId, PageRequest.of(0, 100)).getContent();   
+  Page<Entry> findByCollectionId(UUID collectionId, Pageable pageable) {
+    Preconditions.checkArgument(Objects.nonNull(collectionId), "collectionId is null");
+    Preconditions.checkArgument(Objects.nonNull(pageable), "pageable is null");
+    return repository.findByCollectionId(collectionId, pageable);   
   }
 
   Optional<Entry> findById(UUID id) {

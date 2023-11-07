@@ -3,6 +3,7 @@ package de.wagner1975.eezycollectionz.entry;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +55,7 @@ public class EntryController {
         mediaType = "application/json")})
   @GetMapping("")
   public List<Entry> findByCollectionId(@RequestParam UUID collectionId) {
-    return service.findByCollectionId(collectionId);    
+    return service.findByCollectionId(collectionId, PageRequest.of(0, 100)).getContent();    
   }
 
   @Operation(

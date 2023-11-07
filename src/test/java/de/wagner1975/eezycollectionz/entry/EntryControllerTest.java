@@ -5,9 +5,12 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -51,10 +54,15 @@ class EntryControllerTest {
   @MockBean
   private EntryService serviceMock;
 
+  @Mock
+  private PageImpl<Entry> pageMock;  
+
   @Test
   void getByCollectionId_Success_Ok() throws Exception {
-      when(serviceMock.findByCollectionId(eq(UUID.fromString(DEFAULT_COLLECTION_ID))))
-        .thenReturn(Collections.emptyList());
+      when(pageMock.getContent()).thenReturn(Collections.emptyList());
+
+      when(serviceMock.findByCollectionId(eq(UUID.fromString(DEFAULT_COLLECTION_ID)), any(Pageable.class)))
+        .thenReturn(pageMock);
 
       mockMvc
         .perform(get(REQUEST_PATH + "?collectionId=" + DEFAULT_COLLECTION_ID))

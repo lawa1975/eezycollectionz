@@ -20,7 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.wagner1975.eezycollectionz.collection.Collection;
@@ -31,6 +34,8 @@ class EntryServiceTest {
 
   private static final UUID DEFAULT_COLLECTION_ID = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
   private static final UUID DEFAULT_ENTRY_ID = UUID.fromString("c725efeb-de77-46df-916a-2fc195376386");
+
+  private static final PageRequest DEFAULT_PAGE_REQUEST = PageRequest.of(1, 2, Sort.by(Direction.ASC, "id"));
 
   @Mock
   private EntryRepository repositoryMock;
@@ -45,7 +50,7 @@ class EntryServiceTest {
   private EntryService objectUnderTest;
   
   @Test
-  void findByCollectionId_IsFound_ReturnsList() {
+  void findByCollectionId_IsFound_ReturnsPageWithEntries() {
     var id1 = UUID.fromString("00000001-1111-0000-0000-000000000001");
     var id2 = UUID.fromString("00000002-2222-0000-0000-000000000002");
 
@@ -54,38 +59,50 @@ class EntryServiceTest {
         Entry.builder().id(id1).build(),
         Entry.builder().id(id2).build()));
 
-    when(repositoryMock.findByCollectionId(eq(DEFAULT_COLLECTION_ID), any(Pageable.class)))
+    when(repositoryMock.findByCollectionId(eq(DEFAULT_COLLECTION_ID), eq(DEFAULT_PAGE_REQUEST)))
       .thenReturn(pageMock);
 
-    var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID);
+    var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID, DEFAULT_PAGE_REQUEST);
 
     assertNotNull(result);
-    assertEquals(result.size(), 2);
-    assertEquals(result.get(0).getId(), id1);
-    assertEquals(result.get(1).getId(), id2); 
+    var content = result.getContent();
+    assertNotNull(content);
+    assertEquals(content.size(), 2);
+    assertEquals(content.get(0).getId(), id1);
+    assertEquals(content.get(1).getId(), id2);
   }
 
   @Test
-  void findByCollectionId_NotFound_ReturnsEmpty() {
+  void findByCollectionId_NotFound_ReturnsEmptyPage() {
     when(pageMock.getContent())
       .thenReturn(List.of());
 
     when(repositoryMock.findByCollectionId(any(UUID.class), any(Pageable.class)))
       .thenReturn(pageMock);
 
-    var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID);
+    var result = objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID, DEFAULT_PAGE_REQUEST);
 
     assertNotNull(result);
-    assertTrue(result.isEmpty());
+    var content = result.getContent();
+    assertNotNull(content);
+    assertEquals(content.size(), 0);
   }
 
   @Test
   void findByCollectionId_GivenCollectionIdIsNull_ThrowsException() {
     var exception = assertThrows(IllegalArgumentException.class, () -> {
-      objectUnderTest.findByCollectionId(null);
+      objectUnderTest.findByCollectionId(null, DEFAULT_PAGE_REQUEST);
     });
     assertEquals("collectionId is null", exception.getMessage());     
-  }  
+  }
+  
+  @Test
+  void findByCollectionId_GivenPageableIsNull_ThrowsException() {
+    var exception = assertThrows(IllegalArgumentException.class, () -> {
+      objectUnderTest.findByCollectionId(DEFAULT_COLLECTION_ID, null);
+    });
+    assertEquals("pageable is null", exception.getMessage());     
+  }   
 
   @Test
   void findById_IsFound_ReturnsCollection() {

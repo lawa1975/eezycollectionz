@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -56,7 +57,7 @@ class CollectionControllerTest {
   @MockBean
   private CollectionService serviceMock;
 
-  @MockBean
+  @Mock
   private PageImpl<Collection> pageMock;
 
   @Captor
@@ -68,7 +69,7 @@ class CollectionControllerTest {
     var id2 = "00000002-2222-0000-0000-000000000002";
 
     when(pageMock.getContent())
-    .thenReturn(List.of(
+      .thenReturn(List.of(
         Collection.builder().id(UUID.fromString(id2)).build(),
         Collection.builder().id(UUID.fromString(id1)).build()));   
 
