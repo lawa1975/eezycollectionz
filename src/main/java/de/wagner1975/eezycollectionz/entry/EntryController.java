@@ -3,8 +3,14 @@ package de.wagner1975.eezycollectionz.entry;
 import java.util.List;
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,8 +46,7 @@ public class EntryController {
 
   @Operation(
     summary = "Get all entries of a collection",
-    description = "Finds all entries which are contained in a single collection",
-    tags = { "Entries" })
+    description = "Finds all entries which are contained in a single collection")
   @Parameter(
     name = "collectionId",
     description = "Identifies the collection, in which to find the entries",
@@ -59,9 +64,27 @@ public class EntryController {
   }
 
   @Operation(
+    summary = "Get entries of a collection using pagination")
+  @Parameter(
+    name = "collectionId",
+    description = "Identifies the collection, in which to find the entries",
+    required = true)    
+  @ApiResponse(
+    responseCode = "200",
+    description ="Page with collections and additional information",
+    useReturnTypeSchema = true)
+  @GetMapping(path = "/paginated", produces = MediaType.APPLICATION_JSON_VALUE)
+  public Page<Entry> findByCollectionId(
+    @RequestParam UUID collectionId,
+    @ParameterObject
+    @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Direction.ASC)
+    Pageable pageable) {
+    return service.findByCollectionId(collectionId, pageable);
+  }
+
+  @Operation(
     summary = "Get a single entry",
-    description = "Finds an existing entry by its identifier (UUID)",    
-    tags = { "Entries" })
+    description = "Finds an existing entry by its identifier (UUID)") 
   @Parameter(
     name = "id",
     description = "Identifies the entry to find",
@@ -87,7 +110,6 @@ public class EntryController {
   @Operation(
     summary = "Create an entry",
     description = "Creates a new entry and adds it to a single collection",
-    tags = { "Entries" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Entry data",
       content = @Content(schema = @Schema(implementation = EntryInput.class),
@@ -117,7 +139,6 @@ public class EntryController {
   @Operation(
     summary = "Update an entry",
     description = "Gets an existing entry by its identifier (UUID) and updates the data",    
-    tags = { "Entries" },
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Entry data",
       content = @Content(schema = @Schema(implementation = EntryInput.class),
@@ -148,8 +169,7 @@ public class EntryController {
 
   @Operation(
     summary = "Delete an entry",
-    description = "Deletes an existing entry by its identifier (UUID)",    
-    tags = { "Entries" })
+    description = "Deletes an existing entry by its identifier (UUID)")
   @Parameter(
     name = "id",
     description = "Identifies the entry to be deleted",
