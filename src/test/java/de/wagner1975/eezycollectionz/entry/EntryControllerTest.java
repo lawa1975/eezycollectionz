@@ -2,9 +2,12 @@ package de.wagner1975.eezycollectionz.entry;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,6 +21,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -55,7 +61,10 @@ class EntryControllerTest {
   private EntryService serviceMock;
 
   @Mock
-  private PageImpl<Entry> pageMock;  
+  private PageImpl<Entry> pageMock;
+
+  @Captor
+  private ArgumentCaptor<Pageable> pageableCaptor;  
 
   @Test
   void getByCollectionId_Success_Ok() throws Exception {
@@ -68,6 +77,38 @@ class EntryControllerTest {
         .perform(get(REQUEST_PATH + "?collectionId=" + DEFAULT_COLLECTION_ID))
         .andExpect(MockMvcResultMatchers.status().isOk());
   }
+
+  @Test
+  void getByCollectionIdPaginated_Success_Ok() throws Exception {
+    var id1 = "00000001-1111-aaaa-aaaa-000000000001";
+    var id2 = "00000002-2222-aaaa-aaaa-000000000002";
+
+    when(pageMock.getContent())
+      .thenReturn(List.of(
+        Entry.builder().id(UUID.fromString(id2)).build(),
+        Entry.builder().id(UUID.fromString(id1)).build())); 
+        
+    when(serviceMock.findByCollectionId(eq(UUID.fromString(DEFAULT_COLLECTION_ID)), pageableCaptor.capture()))
+      .thenReturn(pageMock);
+
+    mockMvc
+      .perform(get(REQUEST_PATH + "/paginated?collectionId=" + DEFAULT_COLLECTION_ID + "&page=5&size=2&sort=id,desc"))
+      .andExpect(MockMvcResultMatchers.status().isOk())
+      .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].id").value(id2))
+      .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].id").value(id1));
+
+	  var allValues = pageableCaptor.getAllValues();
+    assertEquals(1, allValues.size());
+    var capturedPageable = allValues.get(0);
+    assertNotNull(capturedPageable);
+    assertEquals(5, capturedPageable.getPageNumber());
+    assertEquals(2, capturedPageable.getPageSize());
+    var sort = capturedPageable.getSort();
+    assertNotNull(sort);
+    var order = sort.toList().get(0);
+    assertEquals("id", order.getProperty());
+    assertTrue(order.isDescending());
+  }  
 
   @Test
   void getByCollectionId_InvalidCollectionId_BadRequest() throws Exception {
