@@ -1,11 +1,9 @@
 package de.wagner1975.eezycollectionz.entry;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
@@ -25,7 +23,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -45,26 +42,8 @@ public class EntryController {
   private final EntryService service;
 
   @Operation(
-    summary = "Get all entries of a collection",
-    description = "Finds all entries which are contained in a single collection")
-  @Parameter(
-    name = "collectionId",
-    description = "Identifies the collection, in which to find the entries",
-    required = true)
-  @ApiResponse(
-    responseCode = "200",
-    description ="Array containing all entries from the collection is returned (can be empty)",
-    content = {
-      @Content(
-        array = @ArraySchema(schema = @Schema(implementation = Entry.class)),
-        mediaType = "application/json")})
-  @GetMapping("")
-  public List<Entry> findByCollectionId(@RequestParam UUID collectionId) {
-    return service.findByCollectionId(collectionId, PageRequest.of(0, 100)).getContent();    
-  }
-
-  @Operation(
-    summary = "Get entries of a collection using pagination")
+    summary = "Get entries of a collection using pagination",
+    description = "Finds page of entries which are contained in a single collection")
   @Parameter(
     name = "collectionId",
     description = "Identifies the collection, in which to find the entries",
@@ -73,7 +52,7 @@ public class EntryController {
     responseCode = "200",
     description ="Page with collections and additional information",
     useReturnTypeSchema = true)
-  @GetMapping(path = "/paginated", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(path = "", produces = MediaType.APPLICATION_JSON_VALUE)
   public Page<Entry> findByCollectionId(
     @RequestParam UUID collectionId,
     @ParameterObject

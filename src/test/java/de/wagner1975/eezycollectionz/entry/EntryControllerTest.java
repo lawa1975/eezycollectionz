@@ -1,7 +1,6 @@
 package de.wagner1975.eezycollectionz.entry;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -68,18 +67,6 @@ class EntryControllerTest {
 
   @Test
   void getByCollectionId_Success_Ok() throws Exception {
-      when(pageMock.getContent()).thenReturn(Collections.emptyList());
-
-      when(serviceMock.findByCollectionId(eq(UUID.fromString(DEFAULT_COLLECTION_ID)), any(Pageable.class)))
-        .thenReturn(pageMock);
-
-      mockMvc
-        .perform(get(REQUEST_PATH + "?collectionId=" + DEFAULT_COLLECTION_ID))
-        .andExpect(MockMvcResultMatchers.status().isOk());
-  }
-
-  @Test
-  void getByCollectionIdPaginated_Success_Ok() throws Exception {
     var id1 = "00000001-1111-aaaa-aaaa-000000000001";
     var id2 = "00000002-2222-aaaa-aaaa-000000000002";
 
@@ -92,7 +79,7 @@ class EntryControllerTest {
       .thenReturn(pageMock);
 
     mockMvc
-      .perform(get(REQUEST_PATH + "/paginated?collectionId=" + DEFAULT_COLLECTION_ID + "&page=5&size=2&sort=id,desc"))
+      .perform(get(REQUEST_PATH + "?collectionId=" + DEFAULT_COLLECTION_ID + "&page=5&size=2&sort=id,desc"))
       .andExpect(MockMvcResultMatchers.status().isOk())
       .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].id").value(id2))
       .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].id").value(id1));

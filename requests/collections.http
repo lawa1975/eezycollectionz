@@ -2,7 +2,7 @@
 http://localhost:8080/api/collections
 
 ### Get collections paginated
-http://localhost:8080/api/collections/paginated?page=0&size=5
+http://localhost:8080/api/collections?page=0&size=5
 
 ### Add a new collection
 POST http://localhost:8080/api/collections HTTP/1.1
