@@ -1,6 +1,7 @@
 package de.wagner1975.eezycollectionz.collection;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.time.Instant;
@@ -59,7 +60,17 @@ class CollectionControllerIntegTest {
       createCollection("00000006-6666-eedd-0000-000000000006", "Liste T"),
       createCollection("00000007-7777-ddcc-0000-000000000007", "Liste S"),
       createCollection("00000008-8888-ccbb-0000-000000000008", "Liste R"),
-      createCollection("00000009-9999-bbaa-0000-000000000009", "Liste Q"));
+      createCollection("00000009-9999-bbaa-0000-000000000009", "Liste Q"),
+      createCollection("10000000-0000-aabb-0000-000000000000", "Liste P"),
+      createCollection("10000001-1111-bbcc-0000-000000000001", "Liste O"),
+      createCollection("10000002-2222-ccdd-0000-000000000002", "Liste N"),
+      createCollection("10000003-3333-ddee-0000-000000000003", "Liste M"),
+      createCollection("10000004-4444-eeff-0000-000000000004", "Liste L"),
+      createCollection("10000005-5555-ffee-0000-000000000005", "Liste K"),
+      createCollection("10000006-6666-eedd-0000-000000000006", "Liste J"),
+      createCollection("10000007-7777-ddcc-0000-000000000007", "Liste I"),
+      createCollection("10000008-8888-ccbb-0000-000000000008", "Liste H"),
+      createCollection("10000009-9999-bbaa-0000-000000000009", "Liste G"));      
 
     repository.saveAll(collections);
   }
@@ -68,11 +79,20 @@ class CollectionControllerIntegTest {
   void get_Success_Ok() {
     given()
       .contentType(ContentType.JSON)
+      .param("page", 2)
+      .param("size", 3)
+      .param("sort", "name,asc")
       .when()
       .get("/api/collections")
       .then()
       .statusCode(200)
-      .body("content", hasSize(10));
+      .body("content", hasSize(3))
+      .body("content[0].id", equalTo("10000003-3333-ddee-0000-000000000003"))
+      .body("content[0].name", equalTo("Liste M"))
+      .body("content[1].id", equalTo("10000002-2222-ccdd-0000-000000000002"))
+      .body("content[1].name", equalTo("Liste N"))
+      .body("content[2].id", equalTo("10000001-1111-bbcc-0000-000000000001"))
+      .body("content[2].name", equalTo("Liste O"));      
   }
 
   private Collection createCollection(String id, String name) {
