@@ -95,6 +95,19 @@ class CollectionControllerIntegTest {
       .body("content[2].name", equalTo("Liste O"));      
   }
 
+  @Test
+  void getById_Success_Ok() {
+    given()
+      .contentType(ContentType.JSON)
+      .pathParam("id", "00000006-6666-eedd-0000-000000000006")
+      .when()
+      .get("/api/collections/{id}")
+      .then()
+      .statusCode(200)
+      .body("id", equalTo("00000006-6666-eedd-0000-000000000006"))
+      .body("name", equalTo("Liste T"));     
+  }  
+
   private Collection createCollection(String id, String name) {
     var now = Instant.now();
     return Collection.builder()
