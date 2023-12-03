@@ -3,6 +3,7 @@ package de.wagner1975.eezycollectionz.collection;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,9 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -77,36 +80,54 @@ class CollectionControllerIntegTest {
 
   @Test
   void get_Success_Ok() {
-    given()
-      .contentType(ContentType.JSON)
-      .param("page", 2)
-      .param("size", 3)
-      .param("sort", "name,asc")
-      .when()
-      .get("/api/collections")
-      .then()
-      .statusCode(200)
-      .body("content", hasSize(3))
-      .body("content[0].id", equalTo("10000003-3333-ddee-0000-000000000003"))
-      .body("content[0].name", equalTo("Liste M"))
-      .body("content[1].id", equalTo("10000002-2222-ccdd-0000-000000000002"))
-      .body("content[1].name", equalTo("Liste N"))
-      .body("content[2].id", equalTo("10000001-1111-bbcc-0000-000000000001"))
-      .body("content[2].name", equalTo("Liste O"));      
+    given().
+      contentType(ContentType.JSON).
+      param("page", 2).
+      param("size", 3).
+      param("sort", "name,asc").
+    when().
+      get("/api/collections").
+    then().
+      statusCode(200).
+      body("content", hasSize(3)).
+      body("content[0].id", equalTo("10000003-3333-ddee-0000-000000000003")).
+      body("content[0].name", equalTo("Liste M")).
+      body("content[1].id", equalTo("10000002-2222-ccdd-0000-000000000002")).
+      body("content[1].name", equalTo("Liste N")).
+      body("content[2].id", equalTo("10000001-1111-bbcc-0000-000000000001")).
+      body("content[2].name", equalTo("Liste O"));      
   }
 
   @Test
   void getById_Success_Ok() {
-    given()
-      .contentType(ContentType.JSON)
-      .pathParam("id", "00000006-6666-eedd-0000-000000000006")
-      .when()
-      .get("/api/collections/{id}")
-      .then()
-      .statusCode(200)
-      .body("id", equalTo("00000006-6666-eedd-0000-000000000006"))
-      .body("name", equalTo("Liste T"));     
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", "00000006-6666-eedd-0000-000000000006").
+    when().
+      get("/api/collections/{id}").
+    then().
+      statusCode(200).
+      body("id", equalTo("00000006-6666-eedd-0000-000000000006")).
+      body("name", equalTo("Liste T"));     
   }  
+
+  @Test
+  @Transactional
+  @Rollback
+  void post_Success_Created() {
+    long countBefore = repository.count();
+    long countAfter = countBefore + 1;
+
+    given().
+      contentType(ContentType.JSON).
+      body(CollectionInput.builder().name("Neue Liste").build()).
+    when().
+      post("/api/collections").
+    then().
+      statusCode(201);
+
+    assertEquals(countAfter, repository.count());      
+  }
 
   private Collection createCollection(String id, String name) {
     var now = Instant.now();
