@@ -1,6 +1,7 @@
 package de.wagner1975.eezycollectionz.collection;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,7 +38,7 @@ class CollectionService {
     try {
       var generatedId = provider.generateId();
 
-      var now = Instant.now();
+      var now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
       var newCollection = Collection.builder()
         .id(generatedId)
@@ -65,7 +66,7 @@ class CollectionService {
 
     var existingCollection = foundCollection.get();
 
-    existingCollection.setLastModifiedAt(Instant.now());
+    existingCollection.setLastModifiedAt(Instant.now().truncatedTo(ChronoUnit.MICROS));
     existingCollection.setName(collectionInput.getName());
 
     return Optional.ofNullable(repository.save(existingCollection));

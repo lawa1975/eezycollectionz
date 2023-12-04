@@ -3,6 +3,7 @@ package de.wagner1975.eezycollectionz.collection;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Instant;
@@ -25,11 +26,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class CollectionControllerIntegTest {
+
+  private static final String REQUEST_PATH = "/api/collections";  
 
   @Container
   private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16.1-alpine3.18");  
@@ -54,26 +58,26 @@ class CollectionControllerIntegTest {
     repository.deleteAll();
 
     var collections = List.of(
-      createCollection("00000000-0000-aabb-0000-000000000000", "Liste Z"),
-      createCollection("00000001-1111-bbcc-0000-000000000001", "Liste Y"),
-      createCollection("00000002-2222-ccdd-0000-000000000002", "Liste X"),
-      createCollection("00000003-3333-ddee-0000-000000000003", "Liste W"),
-      createCollection("00000004-4444-eeff-0000-000000000004", "Liste V"),
-      createCollection("00000005-5555-ffee-0000-000000000005", "Liste U"),
-      createCollection("00000006-6666-eedd-0000-000000000006", "Liste T"),
-      createCollection("00000007-7777-ddcc-0000-000000000007", "Liste S"),
-      createCollection("00000008-8888-ccbb-0000-000000000008", "Liste R"),
-      createCollection("00000009-9999-bbaa-0000-000000000009", "Liste Q"),
-      createCollection("10000000-0000-aabb-0000-000000000000", "Liste P"),
-      createCollection("10000001-1111-bbcc-0000-000000000001", "Liste O"),
-      createCollection("10000002-2222-ccdd-0000-000000000002", "Liste N"),
-      createCollection("10000003-3333-ddee-0000-000000000003", "Liste M"),
-      createCollection("10000004-4444-eeff-0000-000000000004", "Liste L"),
-      createCollection("10000005-5555-ffee-0000-000000000005", "Liste K"),
-      createCollection("10000006-6666-eedd-0000-000000000006", "Liste J"),
-      createCollection("10000007-7777-ddcc-0000-000000000007", "Liste I"),
-      createCollection("10000008-8888-ccbb-0000-000000000008", "Liste H"),
-      createCollection("10000009-9999-bbaa-0000-000000000009", "Liste G"));      
+      createCollection("00000000-0000-aabb-0000-000000000000", "Collection Z"),
+      createCollection("00000001-1111-bbcc-0000-000000000001", "Collection Y"),
+      createCollection("00000002-2222-ccdd-0000-000000000002", "Collection X"),
+      createCollection("00000003-3333-ddee-0000-000000000003", "Collection W"),
+      createCollection("00000004-4444-eeff-0000-000000000004", "Collection V"),
+      createCollection("00000005-5555-ffee-0000-000000000005", "Collection U"),
+      createCollection("00000006-6666-eedd-0000-000000000006", "Collection T"),
+      createCollection("00000007-7777-ddcc-0000-000000000007", "Collection S"),
+      createCollection("00000008-8888-ccbb-0000-000000000008", "Collection R"),
+      createCollection("00000009-9999-bbaa-0000-000000000009", "Collection Q"),
+      createCollection("10000000-0000-aabb-0000-000000000000", "Collection P"),
+      createCollection("10000001-1111-bbcc-0000-000000000001", "Collection O"),
+      createCollection("10000002-2222-ccdd-0000-000000000002", "Collection N"),
+      createCollection("10000003-3333-ddee-0000-000000000003", "Collection M"),
+      createCollection("10000004-4444-eeff-0000-000000000004", "Collection L"),
+      createCollection("10000005-5555-ffee-0000-000000000005", "Collection K"),
+      createCollection("10000006-6666-eedd-0000-000000000006", "Collection J"),
+      createCollection("10000007-7777-ddcc-0000-000000000007", "Collection I"),
+      createCollection("10000008-8888-ccbb-0000-000000000008", "Collection H"),
+      createCollection("10000009-9999-bbaa-0000-000000000009", "Collection G"));      
 
     repository.saveAll(collections);
   }
@@ -86,16 +90,17 @@ class CollectionControllerIntegTest {
       param("size", 3).
       param("sort", "name,asc").
     when().
-      get("/api/collections").
+      get(REQUEST_PATH).
     then().
       statusCode(200).
-      body("content", hasSize(3)).
-      body("content[0].id", equalTo("10000003-3333-ddee-0000-000000000003")).
-      body("content[0].name", equalTo("Liste M")).
-      body("content[1].id", equalTo("10000002-2222-ccdd-0000-000000000002")).
-      body("content[1].name", equalTo("Liste N")).
-      body("content[2].id", equalTo("10000001-1111-bbcc-0000-000000000001")).
-      body("content[2].name", equalTo("Liste O"));      
+      body(
+        "content", hasSize(3),
+        "content[0].id", equalTo("10000003-3333-ddee-0000-000000000003"),
+        "content[0].name", equalTo("Collection M"),
+        "content[1].id", equalTo("10000002-2222-ccdd-0000-000000000002"),
+        "content[1].name", equalTo("Collection N"),
+        "content[2].id", equalTo("10000001-1111-bbcc-0000-000000000001"),
+        "content[2].name", equalTo("Collection O"));      
   }
 
   @Test
@@ -104,11 +109,12 @@ class CollectionControllerIntegTest {
       contentType(ContentType.JSON).
       pathParam("id", "00000006-6666-eedd-0000-000000000006").
     when().
-      get("/api/collections/{id}").
+      get(REQUEST_PATH + "/{id}").
     then().
       statusCode(200).
-      body("id", equalTo("00000006-6666-eedd-0000-000000000006")).
-      body("name", equalTo("Liste T"));     
+      body(
+        "id", equalTo("00000006-6666-eedd-0000-000000000006"),
+        "name", equalTo("Collection T"));
   }  
 
   @Test
@@ -116,17 +122,43 @@ class CollectionControllerIntegTest {
   @Rollback
   void post_Success_Created() {
     long countBefore = repository.count();
-    long countAfter = countBefore + 1;
+    String newName = "A brand new collection";
 
+    Response response = 
     given().
       contentType(ContentType.JSON).
-      body(CollectionInput.builder().name("Neue Liste").build()).
+      body(CollectionInput.builder().name(newName).build()).
     when().
-      post("/api/collections").
+      post(REQUEST_PATH).
     then().
-      statusCode(201);
+      statusCode(201).
+      body(
+        "id", not(equalTo(null)),
+        "createdAt", not(equalTo(null)),
+        "lastModifiedAt", not(equalTo(null)),
+        "name", equalTo(newName)).
+    extract().response();
 
-    assertEquals(countAfter, repository.count());      
+    long countAfter = countBefore + 1;
+    String newIdAsString = response.path("id");
+    String createdAtAsString = response.path("createdAt");
+    String lastModifiedAtAsString = response.path("lastModifiedAt");
+
+    assertEquals(countAfter, repository.count());
+    assertEquals(createdAtAsString, lastModifiedAtAsString);
+    
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", newIdAsString).
+    when().
+      get("/api/collections/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(newIdAsString),
+        "createdAt", equalTo(createdAtAsString),
+        "lastModifiedAt", equalTo(lastModifiedAtAsString),
+        "name", equalTo(newName));    
   }
 
   private Collection createCollection(String id, String name) {

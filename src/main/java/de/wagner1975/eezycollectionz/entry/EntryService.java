@@ -1,6 +1,7 @@
 package de.wagner1975.eezycollectionz.entry;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,7 +43,7 @@ class EntryService {
     try {
       var generatedId = provider.generateId();
 
-      var now = Instant.now();
+      var now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
       var newEntry = Entry.builder()
         .id(generatedId)
@@ -71,7 +72,7 @@ class EntryService {
 
     var existingEntry = foundEntry.get();
 
-    existingEntry.setLastModifiedAt(Instant.now());
+    existingEntry.setLastModifiedAt(Instant.now().truncatedTo(ChronoUnit.MICROS));
     existingEntry.setName(entryInput.getName());
 
     return Optional.ofNullable(repository.save(existingEntry));
