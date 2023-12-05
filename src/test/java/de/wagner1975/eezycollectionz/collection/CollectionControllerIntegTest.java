@@ -124,10 +124,10 @@ class CollectionControllerIntegTest {
   @Transactional
   @Rollback
   void post_Success_Created() {
-    var timeBefore = Instant.now().truncatedTo(ChronoUnit.MICROS);
-    var countBefore = repository.count();
-    
     var newName = "A brand new collection";
+
+    var countBefore = repository.count();
+    var timeBefore = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
     var response = 
     given().
