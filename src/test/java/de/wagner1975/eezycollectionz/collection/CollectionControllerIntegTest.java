@@ -3,7 +3,7 @@ package de.wagner1975.eezycollectionz.collection;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Instant;
@@ -33,7 +33,9 @@ import io.restassured.response.Response;
 @ActiveProfiles("test")
 class CollectionControllerIntegTest {
 
-  private static final String REQUEST_PATH = "/api/collections";  
+  private static final String REQUEST_PATH = "/api/collections";
+  private static final String UUID_V4_REGEX = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$";
+  private static final String ISO_8601_DATE_REGEX = "^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2}(?:\\.\\d*)?)((-(\\d{2}):(\\d{2})|Z)?)$";
 
   @Container
   private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16.1-alpine3.18");  
@@ -133,9 +135,9 @@ class CollectionControllerIntegTest {
     then().
       statusCode(201).
       body(
-        "id", not(equalTo(null)),
-        "createdAt", not(equalTo(null)),
-        "lastModifiedAt", not(equalTo(null)),
+        "id", matchesPattern(UUID_V4_REGEX),
+        "createdAt", matchesPattern(ISO_8601_DATE_REGEX),
+        "lastModifiedAt", matchesPattern(ISO_8601_DATE_REGEX),
         "name", equalTo(newName)).
     extract().response();
 
