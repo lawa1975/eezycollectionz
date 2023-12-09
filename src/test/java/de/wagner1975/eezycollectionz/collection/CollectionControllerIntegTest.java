@@ -4,8 +4,10 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -17,11 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -121,12 +121,11 @@ class CollectionControllerIntegTest {
   }  
 
   @Test
-  @Transactional
-  @Rollback
   void post_Success_Created() {
     var newName = "A brand new collection";
 
     var countBefore = repository.count();
+
     var timeBefore = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
     var response = 
@@ -163,7 +162,7 @@ class CollectionControllerIntegTest {
       contentType(ContentType.JSON).
       pathParam("id", newIdAsString).
     when().
-      get("/api/collections/{id}").
+      get(REQUEST_PATH + "/{id}").
     then().
       statusCode(200).
       body(
@@ -171,6 +170,72 @@ class CollectionControllerIntegTest {
         "createdAt", equalTo(createdAtAsString),
         "lastModifiedAt", equalTo(lastModifiedAtAsString),
         "name", equalTo(newName));    
+  }
+
+  @Test
+  void put_Success_Ok() {
+    var newName = "Another freaky collection name";
+
+    var existingIdAsString = "00000004-4444-4000-8000-eeff00000004";
+    
+    var responseBefore =
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(existingIdAsString),
+        "name", not(equalTo(newName))).
+    extract().response();
+
+    String createdAtBeforeAsString = responseBefore.path("createdAt");
+    String lastModifiedAtBeforeAsString = responseBefore.path("lastModifiedAt");    
+    
+    var countBefore = repository.count();
+    var timeBefore = Instant.now().truncatedTo(ChronoUnit.MICROS);
+
+    var response = 
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+      body(CollectionInput.builder().name(newName).build()).
+    when().
+      put(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(existingIdAsString),
+        "createdAt", equalTo(createdAtBeforeAsString),
+        "lastModifiedAt", matchesPattern(ISO_8601_DATE_REGEX),
+        "name", equalTo(newName)).
+    extract().response();
+
+    var timeAfter = Instant.now().truncatedTo(ChronoUnit.MICROS); 
+
+    assertEquals(countBefore, repository.count());
+
+    String lastModifiedAtAsString = response.path("lastModifiedAt");
+    assertNotEquals(lastModifiedAtBeforeAsString, lastModifiedAtAsString);
+
+    var lastModifiedAt = Instant.parse(lastModifiedAtAsString);
+    assertTrue(lastModifiedAt.compareTo(timeBefore) >= 0);
+    assertTrue(lastModifiedAt.compareTo(timeAfter) <= 0);
+
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(existingIdAsString),
+        "createdAt", equalTo(createdAtBeforeAsString),
+        "lastModifiedAt", equalTo(lastModifiedAtAsString),
+        "name", equalTo(newName));      
   }
 
   private Collection createCollection(String id, String name) {
