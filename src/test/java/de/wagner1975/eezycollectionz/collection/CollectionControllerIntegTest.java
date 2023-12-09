@@ -238,6 +238,36 @@ class CollectionControllerIntegTest {
         "name", equalTo(newName));      
   }
 
+  @Test
+  void delete_Success_NoContent()  {
+    var existingIdAsString = "00000002-2222-4000-8000-ccdd00000002";
+    
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body("id", equalTo(existingIdAsString));
+
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      delete(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(204);
+      
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(404);
+  }  
+
   private Collection createCollection(String id, String name) {
     var now = Instant.now();
     return Collection.builder()
