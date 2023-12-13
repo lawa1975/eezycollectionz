@@ -1,7 +1,5 @@
 package de.wagner1975.eezycollectionz.collection;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,6 +11,7 @@ import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
+import de.wagner1975.eezycollectionz.support.TimeFactory;
 
 @Service
 @AllArgsConstructor
@@ -21,6 +20,8 @@ class CollectionService {
   private final CollectionRepository repository;
 
   private final CollectionIdProvider provider;
+
+  private final TimeFactory timeFactory;
 
   Page<Collection> findAll(Pageable pageable) {
     Preconditions.checkArgument(Objects.nonNull(pageable), "pageable is null");
@@ -38,7 +39,7 @@ class CollectionService {
     try {
       var generatedId = provider.generateId();
 
-      var now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+      var now = timeFactory.now();
 
       var newCollection = Collection.builder()
         .id(generatedId)
@@ -66,7 +67,7 @@ class CollectionService {
 
     var existingCollection = foundCollection.get();
 
-    existingCollection.setLastModifiedAt(Instant.now().truncatedTo(ChronoUnit.MICROS));
+    existingCollection.setLastModifiedAt(timeFactory.now());
     existingCollection.setName(collectionInput.getName());
 
     return Optional.ofNullable(repository.save(existingCollection));

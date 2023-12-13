@@ -1,7 +1,6 @@
 package de.wagner1975.eezycollectionz.collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,11 +25,14 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
+import de.wagner1975.eezycollectionz.support.TimeFactory;
 
 @ExtendWith(SpringExtension.class)
 class CollectionServiceTest {
 
   private static final UUID DEFAULT_ID = UUID.fromString("f3381a9d-ee1a-5fdc-aa1a-1ffab2acaf01");
+  private static final Instant INSTANT_NOW = Instant.parse("2023-12-13T08:11:22.963Z");
+  private static final Instant INSTANT_PAST = Instant.parse("2023-12-12T07:35:54.864Z");
 
   @Mock
   private CollectionRepository repositoryMock;
@@ -39,7 +41,10 @@ class CollectionServiceTest {
   private CollectionIdProvider idProviderMock;
 
   @Mock
-  private PageImpl<Collection> pageMock;  
+  private PageImpl<Collection> pageMock;
+
+  @Mock
+  private TimeFactory timeFactoryMock;
 
   @InjectMocks
   private CollectionService objectUnderTest;
@@ -112,24 +117,21 @@ class CollectionServiceTest {
     var name = "Shiny stuff";
 
     when(idProviderMock.generateId()).thenReturn(DEFAULT_ID);
+    when(timeFactoryMock.now()).thenReturn(INSTANT_NOW);
     when(repositoryMock.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    var millisBefore = Instant.now().toEpochMilli();
+
     var result = objectUnderTest.create(CollectionInput.builder().name(name).build());
-    var millisAfter = Instant.now().toEpochMilli();
 
     assertNotNull(result);
     assertTrue(result.isPresent());
     
     var savedCollection = result.get();
+    assertNotNull(savedCollection);
     assertEquals(DEFAULT_ID, savedCollection.getId());
     assertEquals(name, savedCollection.getName());
-
-    var createdAt = savedCollection.getCreatedAt();
-    var lastModifiedAt = savedCollection.getLastModifiedAt();
-    assertNotNull(createdAt);  
-    assertTrue(createdAt.toEpochMilli() >= millisBefore && createdAt.toEpochMilli() <= millisAfter);
-    assertEquals(createdAt, lastModifiedAt);
+    assertEquals(INSTANT_NOW, savedCollection.getCreatedAt());
+    assertEquals(INSTANT_NOW, savedCollection.getLastModifiedAt());
   }
 
   @Test
@@ -163,38 +165,30 @@ class CollectionServiceTest {
 
   @Test
   void update_Saved_ReturnsCollection() {
-    var originalInstant = Instant.parse("2010-10-10T11:11:11.295558200Z");
     var originalCollection = Collection.builder()
       .id(DEFAULT_ID)
-      .createdAt(originalInstant)
-      .lastModifiedAt(originalInstant)
+      .createdAt(INSTANT_PAST)
+      .lastModifiedAt(INSTANT_PAST)
       .name("Shiny stuff")
       .build();
 
     var modifiedName = "New words";
 
     when(repositoryMock.findById(eq(DEFAULT_ID))).thenReturn(Optional.of(originalCollection));
+    when(timeFactoryMock.now()).thenReturn(INSTANT_NOW);
     when(repositoryMock.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));    
 
-    var millisBefore = Instant.now().toEpochMilli();
     var result = objectUnderTest.update(CollectionInput.builder().name(modifiedName).build(), DEFAULT_ID);
-    var millisAfter = Instant.now().toEpochMilli();
 
     assertNotNull(result);
     assertTrue(result.isPresent());
     
     var savedCollection = result.get();
+    assertNotNull(savedCollection);    
     assertEquals(DEFAULT_ID, savedCollection.getId());
     assertEquals(modifiedName, savedCollection.getName());
-
-    var createdAt = savedCollection.getCreatedAt();
-    assertNotNull(createdAt);
-    assertEquals(originalInstant, createdAt); 
-
-    var lastModifiedAt = savedCollection.getLastModifiedAt();
-    assertNotNull(lastModifiedAt);
-    assertNotEquals(originalInstant, lastModifiedAt); 
-    assertTrue(lastModifiedAt.toEpochMilli() >= millisBefore && lastModifiedAt.toEpochMilli() <= millisAfter);
+    assertEquals(INSTANT_PAST, savedCollection.getCreatedAt());
+    assertEquals(INSTANT_NOW, savedCollection.getLastModifiedAt());
   }
 
   @Test

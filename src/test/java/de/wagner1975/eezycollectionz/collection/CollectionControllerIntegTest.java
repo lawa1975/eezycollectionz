@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +25,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import de.wagner1975.eezycollectionz.support.TimeFactory;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
@@ -53,6 +53,9 @@ class CollectionControllerIntegTest {
 
   @Autowired
   private CollectionRepository repository;
+
+  @Autowired
+  private TimeFactory timeFactory;
 
   @BeforeEach
   void setUp() {
@@ -126,7 +129,7 @@ class CollectionControllerIntegTest {
 
     var countBefore = repository.count();
 
-    var timeBefore = Instant.now().truncatedTo(ChronoUnit.MICROS);
+    var timeBefore = timeFactory.now();
 
     var response = 
     given().
@@ -143,7 +146,7 @@ class CollectionControllerIntegTest {
         "name", equalTo(newName)).
     extract().response();
 
-    var timeAfter = Instant.now().truncatedTo(ChronoUnit.MICROS); 
+    var timeAfter = timeFactory.now(); 
     
     var countAfter = countBefore + 1;
     assertEquals(countAfter, repository.count());
@@ -195,7 +198,7 @@ class CollectionControllerIntegTest {
     String lastModifiedAtBeforeAsString = responseBefore.path("lastModifiedAt");    
     
     var countBefore = repository.count();
-    var timeBefore = Instant.now().truncatedTo(ChronoUnit.MICROS);
+    var timeBefore = timeFactory.now();
 
     var response = 
     given().
@@ -213,7 +216,7 @@ class CollectionControllerIntegTest {
         "name", equalTo(newName)).
     extract().response();
 
-    var timeAfter = Instant.now().truncatedTo(ChronoUnit.MICROS); 
+    var timeAfter = timeFactory.now(); 
 
     assertEquals(countBefore, repository.count());
 

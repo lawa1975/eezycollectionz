@@ -1,7 +1,5 @@
 package de.wagner1975.eezycollectionz.entry;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +14,7 @@ import lombok.AllArgsConstructor;
 
 import de.wagner1975.eezycollectionz.collection.Collection;
 import de.wagner1975.eezycollectionz.support.GenerateIdException;
+import de.wagner1975.eezycollectionz.support.TimeFactory;
 
 @Service
 @AllArgsConstructor
@@ -24,6 +23,8 @@ class EntryService {
   private final EntryRepository repository;
 
   private final EntryIdProvider provider;
+
+  private final TimeFactory timeFactory;
 
   Page<Entry> findByCollectionId(UUID collectionId, Pageable pageable) {
     Preconditions.checkArgument(Objects.nonNull(collectionId), "collectionId is null");
@@ -43,7 +44,7 @@ class EntryService {
     try {
       var generatedId = provider.generateId();
 
-      var now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+      var now = timeFactory.now();
 
       var newEntry = Entry.builder()
         .id(generatedId)
@@ -72,7 +73,7 @@ class EntryService {
 
     var existingEntry = foundEntry.get();
 
-    existingEntry.setLastModifiedAt(Instant.now().truncatedTo(ChronoUnit.MICROS));
+    existingEntry.setLastModifiedAt(timeFactory.now());
     existingEntry.setName(entryInput.getName());
 
     return Optional.ofNullable(repository.save(existingEntry));
