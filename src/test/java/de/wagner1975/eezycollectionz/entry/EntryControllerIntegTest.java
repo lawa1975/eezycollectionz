@@ -2,6 +2,8 @@ package de.wagner1975.eezycollectionz.entry;
 
 import static de.wagner1975.eezycollectionz.TestConstants.POSTGRESQL_DOCKER_IMAGE_NAME;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +12,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -19,6 +23,8 @@ import io.restassured.http.ContentType;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Sql(executionPhase = ExecutionPhase.BEFORE_TEST_METHOD, scripts = "/database/entry_controller_integ_test/before.sql")
+@Sql(executionPhase = ExecutionPhase.AFTER_TEST_METHOD, scripts = "/database/entry_controller_integ_test/after.sql")
 @ActiveProfiles("test")
 class EntryControllerIntegTest {
 
@@ -46,12 +52,21 @@ class EntryControllerIntegTest {
   void get_Success_Ok() {
     given().
       contentType(ContentType.JSON).
-      param("page", 0).
+      param("collectionId", "10000000-a000-4000-8000-10000000a000").
+      param("page", 1).
       param("size", 3).
       param("sort", "name,asc").
     when().
       get(REQUEST_PATH).
     then().
-      statusCode(400);      
+      statusCode(200).
+      body(
+        "content", hasSize(3),
+        "content[0].id", equalTo("20000000-b400-4000-8000-20000000b400"),
+        "content[0].name", equalTo("Entry V (B)"),
+        "content[1].id", equalTo("20000000-b300-4000-8000-20000000b300"),
+        "content[1].name", equalTo("Entry W (B)"),
+        "content[2].id", equalTo("20000000-b200-4000-8000-20000000b200"),
+        "content[2].name", equalTo("Entry X (B)"));            
   }  
 }

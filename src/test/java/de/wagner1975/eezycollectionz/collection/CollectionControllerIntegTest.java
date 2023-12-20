@@ -14,8 +14,6 @@ import static de.wagner1975.eezycollectionz.TestConstants.ISO_8601_DATE_REGEX;
 import static de.wagner1975.eezycollectionz.TestConstants.POSTGRESQL_DOCKER_IMAGE_NAME;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +23,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -35,13 +35,16 @@ import io.restassured.http.ContentType;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Sql(executionPhase = ExecutionPhase.BEFORE_TEST_METHOD, scripts = "/database/collection_controller_integ_test/before.sql")
+@Sql(executionPhase = ExecutionPhase.AFTER_TEST_METHOD, scripts = "/database/collection_controller_integ_test/after.sql")
 @ActiveProfiles("test")
 class CollectionControllerIntegTest {
 
   private static final String REQUEST_PATH = "/api/collections";
 
   @Container
-  private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(POSTGRESQL_DOCKER_IMAGE_NAME);  
+  private static PostgreSQLContainer<?> postgres =
+    new PostgreSQLContainer<>(POSTGRESQL_DOCKER_IMAGE_NAME);  
 
   @DynamicPropertySource
   private static void configureProperties(DynamicPropertyRegistry registry) {
@@ -61,33 +64,7 @@ class CollectionControllerIntegTest {
 
   @BeforeEach
   void setUp() {
-    RestAssured.baseURI = "http://localhost:" + port;
-  
-    repository.deleteAll();
-
-    var collections = List.of(
-      createCollection("00000000-0000-4000-8000-aabb00000000", "Collection Z"),
-      createCollection("00000001-1111-4000-8000-bbcc00000001", "Collection Y"),
-      createCollection("00000002-2222-4000-8000-ccdd00000002", "Collection X"),
-      createCollection("00000003-3333-4000-8000-ddee00000003", "Collection W"),
-      createCollection("00000004-4444-4000-8000-eeff00000004", "Collection V"),
-      createCollection("00000005-5555-4000-8000-ffee00000005", "Collection U"),
-      createCollection("00000006-6666-4000-8000-eedd00000006", "Collection T"),
-      createCollection("00000007-7777-4000-8000-ddcc00000007", "Collection S"),
-      createCollection("00000008-8888-4000-8000-ccbb00000008", "Collection R"),
-      createCollection("00000009-9999-4000-8000-bbaa00000009", "Collection Q"),
-      createCollection("10000000-0000-4000-8000-aabb00000000", "Collection P"),
-      createCollection("10000001-1111-4000-8000-bbcc00000001", "Collection O"),
-      createCollection("10000002-2222-4000-8000-ccdd00000002", "Collection N"),
-      createCollection("10000003-3333-4000-8000-ddee00000003", "Collection M"),
-      createCollection("10000004-4444-4000-8000-eeff00000004", "Collection L"),
-      createCollection("10000005-5555-4000-8000-ffee00000005", "Collection K"),
-      createCollection("10000006-6666-4000-8000-eedd00000006", "Collection J"),
-      createCollection("10000007-7777-4000-8000-ddcc00000007", "Collection I"),
-      createCollection("10000008-8888-4000-8000-ccbb00000008", "Collection H"),
-      createCollection("10000009-9999-4000-8000-bbaa00000009", "Collection G"));      
-
-    repository.saveAll(collections);
+    RestAssured.baseURI = "http://localhost:" + port; 
   }
 
   @Test
@@ -271,15 +248,5 @@ class CollectionControllerIntegTest {
       get(REQUEST_PATH + "/{id}").
     then().
       statusCode(404);
-  }  
-
-  private Collection createCollection(String id, String name) {
-    var now = timeFactory.now();
-    return Collection.builder()
-      .id(UUID.fromString(id))
-      .createdAt(now)
-      .lastModifiedAt(now)
-      .name(name)
-      .build();    
-  }
+  } 
 }
