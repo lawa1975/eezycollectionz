@@ -49,7 +49,7 @@ class EntryControllerIntegTest {
   }
 
   @Test
-  void get_Success_Ok() {
+  void getByCollectionId_Success_Ok() {
     given().
       contentType(ContentType.JSON).
       param("collectionId", "10000000-a000-4000-8000-10000000a000").
@@ -68,5 +68,19 @@ class EntryControllerIntegTest {
         "content[1].name", equalTo("Entry W (B)"),
         "content[2].id", equalTo("20000000-b200-4000-8000-20000000b200"),
         "content[2].name", equalTo("Entry X (B)"));            
-  }  
+  }
+  
+  @Test
+  void getById_Success_Ok() {
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", "20000000-ba00-4000-8000-20000000ba00").
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo("20000000-ba00-4000-8000-20000000ba00"),
+        "name", equalTo("Entry P (A)"));
+  }    
 }
