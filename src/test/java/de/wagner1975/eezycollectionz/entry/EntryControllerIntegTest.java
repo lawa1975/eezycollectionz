@@ -4,9 +4,11 @@ import static de.wagner1975.eezycollectionz.TestConstants.POSTGRESQL_DOCKER_IMAG
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
@@ -42,6 +44,9 @@ class EntryControllerIntegTest {
 
   @LocalServerPort
   private Integer port;
+
+  @Autowired
+  private EntryRepository repository;  
   
   @BeforeEach
   void setUp() {
@@ -82,5 +87,40 @@ class EntryControllerIntegTest {
       body(
         "id", equalTo("20000000-ba00-4000-8000-20000000ba00"),
         "name", equalTo("Entry P (A)"));
-  }    
+  }
+  
+  @Test
+  void delete_Success_NoContent()  {
+    var existingIdAsString = "20000000-b600-4000-8000-20000000b600";
+    
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body("id", equalTo(existingIdAsString));
+
+    var countBefore = repository.count();
+
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      delete(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(204);
+
+    var countAfter = countBefore - 1;
+    assertEquals(countAfter, repository.count());
+
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(404);
+  }   
 }

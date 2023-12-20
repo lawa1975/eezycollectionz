@@ -233,6 +233,8 @@ class CollectionControllerIntegTest {
       statusCode(200).
       body("id", equalTo(existingIdAsString));
 
+    var countBefore = repository.count();
+
     given().
       contentType(ContentType.JSON).
       pathParam("id", existingIdAsString).
@@ -240,6 +242,9 @@ class CollectionControllerIntegTest {
       delete(REQUEST_PATH + "/{id}").
     then().
       statusCode(204);
+
+    var countAfter = countBefore - 1;
+    assertEquals(countAfter, repository.count());    
       
     given().
       contentType(ContentType.JSON).
