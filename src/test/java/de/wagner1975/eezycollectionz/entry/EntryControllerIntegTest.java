@@ -8,7 +8,9 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
@@ -27,6 +29,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import de.wagner1975.eezycollectionz.collection.CollectionInput;
 import de.wagner1975.eezycollectionz.support.TimeFactory;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -41,7 +44,7 @@ class EntryControllerIntegTest {
   private static final String REQUEST_PATH = "/api/entries";
 
   @Container
-  private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(POSTGRESQL_DOCKER_IMAGE_NAME);  
+  private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(POSTGRESQL_DOCKER_IMAGE_NAME);
 
   @DynamicPropertySource
   private static void configureProperties(DynamicPropertyRegistry registry) {
@@ -57,7 +60,7 @@ class EntryControllerIntegTest {
   private EntryRepository repository;
 
   @Autowired
-  private TimeFactory timeFactory;  
+  private TimeFactory timeFactory;
   
   @BeforeEach
   void setUp() {
@@ -83,7 +86,7 @@ class EntryControllerIntegTest {
         "content[1].id", equalTo("20000000-b300-4000-8000-20000000b300"),
         "content[1].name", equalTo("Entry W (B)"),
         "content[2].id", equalTo("20000000-b200-4000-8000-20000000b200"),
-        "content[2].name", equalTo("Entry X (B)"));            
+        "content[2].name", equalTo("Entry X (B)"));
   }
   
   @Test
@@ -150,8 +153,74 @@ class EntryControllerIntegTest {
         "id", equalTo(newIdAsString),
         "createdAt", equalTo(createdAtAsString),
         "lastModifiedAt", equalTo(lastModifiedAtAsString),
-        "name", equalTo(newName));    
+        "name", equalTo(newName));
   }  
+
+  @Test
+  void put_Success_Ok() {
+    var newName = "Another freaky entry name";
+
+    var existingIdAsString = "20000000-b300-4000-8000-20000000b300";
+    
+    var responseBefore =
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(existingIdAsString),
+        "name", not(equalTo(newName))).
+    extract().response();
+
+    String createdAtBeforeAsString = responseBefore.path("createdAt");
+    String lastModifiedAtBeforeAsString = responseBefore.path("lastModifiedAt");
+    
+    var countBefore = repository.count();
+    var timeBefore = timeFactory.now();
+
+    var response = 
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+      body(CollectionInput.builder().name(newName).build()).
+    when().
+      put(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(existingIdAsString),
+        "createdAt", equalTo(createdAtBeforeAsString),
+        "lastModifiedAt", matchesPattern(ISO_8601_DATE_REGEX),
+        "name", equalTo(newName)).
+    extract().response();
+
+    var timeAfter = timeFactory.now();
+
+    assertEquals(countBefore, repository.count());
+
+    String lastModifiedAtAsString = response.path("lastModifiedAt");
+    assertNotEquals(lastModifiedAtBeforeAsString, lastModifiedAtAsString);
+
+    var lastModifiedAt = Instant.parse(lastModifiedAtAsString);
+    assertTrue(lastModifiedAt.compareTo(timeBefore) >= 0);
+    assertTrue(lastModifiedAt.compareTo(timeAfter) <= 0);
+
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", existingIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(existingIdAsString),
+        "createdAt", equalTo(createdAtBeforeAsString),
+        "lastModifiedAt", equalTo(lastModifiedAtAsString),
+        "name", equalTo(newName));
+  }
 
   @Test
   void delete_Success_NoContent()  {
@@ -186,5 +255,5 @@ class EntryControllerIntegTest {
       get(REQUEST_PATH + "/{id}").
     then().
       statusCode(404);
-  }   
+  }
 }

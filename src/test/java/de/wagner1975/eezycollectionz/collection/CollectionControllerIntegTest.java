@@ -174,7 +174,7 @@ class CollectionControllerIntegTest {
     extract().response();
 
     String createdAtBeforeAsString = responseBefore.path("createdAt");
-    String lastModifiedAtBeforeAsString = responseBefore.path("lastModifiedAt");    
+    String lastModifiedAtBeforeAsString = responseBefore.path("lastModifiedAt");
     
     var countBefore = repository.count();
     var timeBefore = timeFactory.now();
@@ -195,7 +195,7 @@ class CollectionControllerIntegTest {
         "name", equalTo(newName)).
     extract().response();
 
-    var timeAfter = timeFactory.now(); 
+    var timeAfter = timeFactory.now();
 
     assertEquals(countBefore, repository.count());
 
@@ -217,7 +217,7 @@ class CollectionControllerIntegTest {
         "id", equalTo(existingIdAsString),
         "createdAt", equalTo(createdAtBeforeAsString),
         "lastModifiedAt", equalTo(lastModifiedAtAsString),
-        "name", equalTo(newName));      
+        "name", equalTo(newName));
   }
 
   @Test
