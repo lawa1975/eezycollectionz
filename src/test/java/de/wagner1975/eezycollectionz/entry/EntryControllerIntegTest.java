@@ -1,10 +1,17 @@
 package de.wagner1975.eezycollectionz.entry;
 
+import static de.wagner1975.eezycollectionz.TestConstants.UUID_V4_REGEX;
+import static de.wagner1975.eezycollectionz.TestConstants.ISO_8601_DATE_REGEX;
 import static de.wagner1975.eezycollectionz.TestConstants.POSTGRESQL_DOCKER_IMAGE_NAME;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +27,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import de.wagner1975.eezycollectionz.support.TimeFactory;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
@@ -46,7 +54,10 @@ class EntryControllerIntegTest {
   private Integer port;
 
   @Autowired
-  private EntryRepository repository;  
+  private EntryRepository repository;
+
+  @Autowired
+  private TimeFactory timeFactory;  
   
   @BeforeEach
   void setUp() {
@@ -88,7 +99,60 @@ class EntryControllerIntegTest {
         "id", equalTo("20000000-ba00-4000-8000-20000000ba00"),
         "name", equalTo("Entry P (A)"));
   }
-  
+
+  @Test
+  void post_Success_Created() {
+    var newName = "A brand new entry";
+
+    var countBefore = repository.count();
+
+    var timeBefore = timeFactory.now();
+
+    var response = 
+    given().
+      contentType(ContentType.JSON).
+      pathParam("collectionId", "10000000-a000-4000-8000-10000000a000").
+      body(EntryInput.builder().name(newName).build()).
+    when().
+      post(REQUEST_PATH + "/collection/{collectionId}").
+    then().
+      statusCode(201).
+      body(
+        "id", matchesPattern(UUID_V4_REGEX),
+        "createdAt", matchesPattern(ISO_8601_DATE_REGEX),
+        "lastModifiedAt", matchesPattern(ISO_8601_DATE_REGEX),
+        "name", equalTo(newName)).
+    extract().response();
+
+    var timeAfter = timeFactory.now(); 
+    
+    var countAfter = countBefore + 1;
+    assertEquals(countAfter, repository.count());
+
+    String createdAtAsString = response.path("createdAt");
+    String lastModifiedAtAsString = response.path("lastModifiedAt");
+    assertEquals(createdAtAsString, lastModifiedAtAsString);
+
+    var createdAt = Instant.parse(createdAtAsString);
+    assertTrue(createdAt.compareTo(timeBefore) >= 0);
+    assertTrue(createdAt.compareTo(timeAfter) <= 0);
+    
+    String newIdAsString = response.path("id");
+
+    given().
+      contentType(ContentType.JSON).
+      pathParam("id", newIdAsString).
+    when().
+      get(REQUEST_PATH + "/{id}").
+    then().
+      statusCode(200).
+      body(
+        "id", equalTo(newIdAsString),
+        "createdAt", equalTo(createdAtAsString),
+        "lastModifiedAt", equalTo(lastModifiedAtAsString),
+        "name", equalTo(newName));    
+  }  
+
   @Test
   void delete_Success_NoContent()  {
     var existingIdAsString = "20000000-b600-4000-8000-20000000b600";
