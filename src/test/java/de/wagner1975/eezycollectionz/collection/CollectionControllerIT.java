@@ -1,17 +1,17 @@
-package de.wagner1975.eezycollectionz.entry;
-
-import static de.wagner1975.eezycollectionz.TestConstants.UUID_V4_REGEX;
-import static de.wagner1975.eezycollectionz.TestConstants.ISO_8601_DATE_REGEX;
-import static de.wagner1975.eezycollectionz.TestConstants.POSTGRESQL_DOCKER_IMAGE_NAME;
+package de.wagner1975.eezycollectionz.collection;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static de.wagner1975.eezycollectionz.TestConstants.UUID_V4_REGEX;
+import static de.wagner1975.eezycollectionz.TestConstants.ISO_8601_DATE_REGEX;
+import static de.wagner1975.eezycollectionz.TestConstants.POSTGRESQL_DOCKER_IMAGE_NAME;
 
 import java.time.Instant;
 
@@ -29,22 +29,22 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import de.wagner1975.eezycollectionz.collection.CollectionInput;
 import de.wagner1975.eezycollectionz.support.TimeFactory;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Sql(executionPhase = ExecutionPhase.BEFORE_TEST_METHOD, scripts = "/database/entry_controller_integ_test/before.sql")
-@Sql(executionPhase = ExecutionPhase.AFTER_TEST_METHOD, scripts = "/database/entry_controller_integ_test/after.sql")
+@Sql(executionPhase = ExecutionPhase.BEFORE_TEST_METHOD, scripts = "/database/collection_controller_integ_test/before.sql")
+@Sql(executionPhase = ExecutionPhase.AFTER_TEST_METHOD, scripts = "/database/collection_controller_integ_test/after.sql")
 @ActiveProfiles("test")
-class EntryControllerIntegTest {
+class CollectionControllerIT {
 
-  private static final String REQUEST_PATH = "/api/entries";
+  private static final String REQUEST_PATH = "/api/collections";
 
   @Container
-  private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(POSTGRESQL_DOCKER_IMAGE_NAME);
+  private static PostgreSQLContainer<?> postgres =
+    new PostgreSQLContainer<>(POSTGRESQL_DOCKER_IMAGE_NAME);  
 
   @DynamicPropertySource
   private static void configureProperties(DynamicPropertyRegistry registry) {
@@ -57,22 +57,21 @@ class EntryControllerIntegTest {
   private Integer port;
 
   @Autowired
-  private EntryRepository repository;
+  private CollectionRepository repository;
 
   @Autowired
   private TimeFactory timeFactory;
-  
+
   @BeforeEach
   void setUp() {
-    RestAssured.baseURI = "http://localhost:" + port;
+    RestAssured.baseURI = "http://localhost:" + port; 
   }
 
   @Test
-  void getByCollectionId_Success_Ok() {
+  void get_Success_Ok() {
     given().
       contentType(ContentType.JSON).
-      param("collectionId", "10000000-a000-4000-8000-10000000a000").
-      param("page", 1).
+      param("page", 2).
       param("size", 3).
       param("sort", "name,asc").
     when().
@@ -81,31 +80,31 @@ class EntryControllerIntegTest {
       statusCode(200).
       body(
         "content", hasSize(3),
-        "content[0].id", equalTo("20000000-b400-4000-8000-20000000b400"),
-        "content[0].name", equalTo("Entry V (B)"),
-        "content[1].id", equalTo("20000000-b300-4000-8000-20000000b300"),
-        "content[1].name", equalTo("Entry W (B)"),
-        "content[2].id", equalTo("20000000-b200-4000-8000-20000000b200"),
-        "content[2].name", equalTo("Entry X (B)"));
+        "content[0].id", equalTo("10000003-3333-4000-8000-ddee00000003"),
+        "content[0].name", equalTo("Collection M"),
+        "content[1].id", equalTo("10000002-2222-4000-8000-ccdd00000002"),
+        "content[1].name", equalTo("Collection N"),
+        "content[2].id", equalTo("10000001-1111-4000-8000-bbcc00000001"),
+        "content[2].name", equalTo("Collection O"));      
   }
-  
+
   @Test
   void getById_Success_Ok() {
     given().
       contentType(ContentType.JSON).
-      pathParam("id", "20000000-ba00-4000-8000-20000000ba00").
+      pathParam("id", "00000006-6666-4000-8000-eedd00000006").
     when().
       get(REQUEST_PATH + "/{id}").
     then().
       statusCode(200).
       body(
-        "id", equalTo("20000000-ba00-4000-8000-20000000ba00"),
-        "name", equalTo("Entry P (A)"));
-  }
+        "id", equalTo("00000006-6666-4000-8000-eedd00000006"),
+        "name", equalTo("Collection T"));
+  }  
 
   @Test
   void post_Success_Created() {
-    var newName = "A brand new entry";
+    var newName = "A brand new collection";
 
     var countBefore = repository.count();
 
@@ -114,10 +113,9 @@ class EntryControllerIntegTest {
     var response = 
     given().
       contentType(ContentType.JSON).
-      pathParam("collectionId", "10000000-a000-4000-8000-10000000a000").
-      body(EntryInput.builder().name(newName).build()).
+      body(CollectionInput.builder().name(newName).build()).
     when().
-      post(REQUEST_PATH + "/collection/{collectionId}").
+      post(REQUEST_PATH).
     then().
       statusCode(201).
       body(
@@ -153,14 +151,14 @@ class EntryControllerIntegTest {
         "id", equalTo(newIdAsString),
         "createdAt", equalTo(createdAtAsString),
         "lastModifiedAt", equalTo(lastModifiedAtAsString),
-        "name", equalTo(newName));
-  }  
+        "name", equalTo(newName));    
+  }
 
   @Test
   void put_Success_Ok() {
-    var newName = "Another freaky entry name";
+    var newName = "Another freaky collection name";
 
-    var existingIdAsString = "20000000-b300-4000-8000-20000000b300";
+    var existingIdAsString = "00000004-4444-4000-8000-eeff00000004";
     
     var responseBefore =
     given().
@@ -224,7 +222,7 @@ class EntryControllerIntegTest {
 
   @Test
   void delete_Success_NoContent()  {
-    var existingIdAsString = "20000000-b600-4000-8000-20000000b600";
+    var existingIdAsString = "00000002-2222-4000-8000-ccdd00000002";
     
     given().
       contentType(ContentType.JSON).
@@ -246,8 +244,8 @@ class EntryControllerIntegTest {
       statusCode(204);
 
     var countAfter = countBefore - 1;
-    assertEquals(countAfter, repository.count());
-
+    assertEquals(countAfter, repository.count());    
+      
     given().
       contentType(ContentType.JSON).
       pathParam("id", existingIdAsString).
@@ -255,5 +253,5 @@ class EntryControllerIntegTest {
       get(REQUEST_PATH + "/{id}").
     then().
       statusCode(404);
-  }
+  } 
 }
